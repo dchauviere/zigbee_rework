@@ -26,33 +26,41 @@
 #ifndef _TUYA_SWITCH_H_
 #define _TUYA_SWITCH_H_
 
+#include "../lib/common/version.h"
 
 /**********************************************************************
  * CONSTANT
  */
 #define TUYA_SWITCH_ENDPOINT  0x01
+#define SWITCH_ENDPOINT_2     0x02
 
 /**********************************************************************
  * TYPEDEFS
  */
 typedef struct{
-	u8 keyType; /* ERTIFICATION_KEY or MASTER_KEY key for touch-link or distribute network
+	u8 keyType; /* CERTIFICATION_KEY or MASTER_KEY key for touch-link or distribute network
 	 	 	 	 SS_UNIQUE_LINK_KEY or SS_GLOBAL_LINK_KEY for distribute network */
 	u8 key[16];	/* the key used */
 }app_linkKey_info_t;
 
 typedef struct{
-	ev_timer_event_t *bdbFBTimerEvt;
 	ev_timer_event_t *timerLedEvt;
-	ev_timer_event_t *timerBattEvt;
-    u16 Vbat;		//current voltage
-	u32 keyPressedTime;
-
 	u16 ledOnTime;
 	u16 ledOffTime;
 	u8 	oriSta;		//original state before blink
 	u8 	sta;		//current state in blink
 	u8 	times;		//blink times
+}app_led_ctx_t;
+
+typedef struct{
+	ev_timer_event_t *bdbFBTimerEvt;
+	ev_timer_event_t *timerBattEvt;
+    u16 Vbat;		//current voltage
+
+	app_led_ctx_t leds[LEDS_NUM];
+	
+	u32 keyPressedTime;
+
 	u8  state;
 
 	u8  keyPressed;
@@ -98,6 +106,16 @@ typedef struct{
 	u8  batteryPercentage;   //0x21
 }zcl_powerAttr_t;
 
+/**
+ *  @brief Defined for on/off cluster attributes
+ */
+typedef struct{
+	u16	 onTime;
+	u16	 offWaitTime;
+	u8	 startUpOnOff;
+	bool onOff;
+	bool globalSceneControl;
+}zcl_onOffAttr_t;
 
 /**
  *  @brief  Defined for poll control cluster attributes
@@ -126,6 +144,7 @@ extern bdb_commissionSetting_t g_bdbCommissionSetting;
 extern u8 TUYA_SWITCH_CB_CLUSTER_NUM;
 extern const zcl_specClusterInfo_t g_tuyaSwitchClusterList[];
 extern const af_simple_descriptor_t tuyaSwitch_simpleDesc;
+extern const af_simple_descriptor_t switch_simpleDesc;
 
 /* Attributes */
 extern zcl_basicAttr_t g_zcl_basicAttrs;

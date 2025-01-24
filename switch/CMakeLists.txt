@@ -11,8 +11,8 @@ ELSE()
 ENDIF()
 
 ADD_DEFINITIONS(
-    -DEND_DEVICE=1
-    #-DROUTER=1
+    #-DEND_DEVICE=1
+    -DROUTER=1
     -DMCU_CORE_${TELINK_PLATFORM}=1
     -DMCU_STARTUP_${TELINK_PLATFORM}=1
     -D__PROJECT_TL_SWITCH__=1
@@ -203,8 +203,8 @@ TARGET_LINK_LIBRARIES(${TARGET}
 
 	#ZigBee
 
-	#zb_router
-    zb_ed
+	zb_router
+    #zb_ed
 	drivers_${TELINK_PLATFORM}
 	timestamp
 

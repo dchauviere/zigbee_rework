@@ -62,88 +62,83 @@ void led_off(u32 pin)
 
 void light_on(void)
 {
-	//printf("Light on\n");
-    led_on(LED1);
+	led_on(LED_POWER);
 }
 
 void light_off(void)
 {
-	//printf("Light off\n");
-    led_off(LED1);
+	led_off(LED_POWER);
 }
 
 void light_init(void)
 {
-	//printf("Light Init\n");
-    led_off(LED1);
-
+	led_off(LED_POWER);
 }
 
 s32 zclLightTimerCb(void *arg)
 {
-    u32 interval = 0;
+	u32 interval = 0;
 
-    if(g_switchAppCtx.sta == g_switchAppCtx.oriSta){
-        g_switchAppCtx.times--;
-        if(g_switchAppCtx.times <= 0){
-            g_switchAppCtx.timerLedEvt = NULL;
-            return -1;
-        }
-    }
+	if(g_switchAppCtx.sta == g_switchAppCtx.oriSta){
+		g_switchAppCtx.times--;
+		if(g_switchAppCtx.times <= 0){
+			g_switchAppCtx.timerLedEvt = NULL;
+			return -1;
+		}
+	}
 
-    g_switchAppCtx.sta = !g_switchAppCtx.sta;
-    if(g_switchAppCtx.sta){
-        light_on();
-        interval = g_switchAppCtx.ledOnTime;
-    }else{
-        light_off();
-        interval = g_switchAppCtx.ledOffTime;
-    }
+	g_switchAppCtx.sta = !g_switchAppCtx.sta;
+	if(g_switchAppCtx.sta){
+		light_on();
+		interval = g_switchAppCtx.ledOnTime;
+	}else{
+		light_off();
+		interval = g_switchAppCtx.ledOffTime;
+	}
 
-    return interval;
+	return interval;
 }
 
 void light_blink_start(u8 times, u16 ledOnTime, u16 ledOffTime)
 {
-    u32 interval = 0;
-    g_switchAppCtx.times = times;
+	u32 interval = 0;
+	g_switchAppCtx.times = times;
 
-    if(!g_switchAppCtx.timerLedEvt){
-        if(g_switchAppCtx.oriSta){
-            light_off();
-            g_switchAppCtx.sta = 0;
-            interval = ledOffTime;
-        }else{
-            light_on();
-            g_switchAppCtx.sta = 1;
-            interval = ledOnTime;
-        }
-        g_switchAppCtx.ledOnTime = ledOnTime;
-        g_switchAppCtx.ledOffTime = ledOffTime;
-        //printf("timer4 led blink start \n");
-        g_switchAppCtx.timerLedEvt = TL_ZB_TIMER_SCHEDULE(zclLightTimerCb, NULL, interval);
-    }
+	if(!g_switchAppCtx.timerLedEvt){
+		if(g_switchAppCtx.oriSta){
+			light_off();
+			g_switchAppCtx.sta = 0;
+			interval = ledOffTime;
+		}else{
+			light_on();
+			g_switchAppCtx.sta = 1;
+			interval = ledOnTime;
+		}
+		g_switchAppCtx.ledOnTime = ledOnTime;
+		g_switchAppCtx.ledOffTime = ledOffTime;
+
+		g_switchAppCtx.timerLedEvt = TL_ZB_TIMER_SCHEDULE(zclLightTimerCb, NULL, interval);
+	}
 }
 
 void light_blink_stop(void)
 {
-    if(g_switchAppCtx.timerLedEvt){
-        TL_ZB_TIMER_CANCEL(&g_switchAppCtx.timerLedEvt);
+	if(g_switchAppCtx.timerLedEvt){
+		TL_ZB_TIMER_CANCEL(&g_switchAppCtx.timerLedEvt);
 
-        g_switchAppCtx.times = 0;
-        if(g_switchAppCtx.oriSta){
-            light_on();
-        }else{
-            light_off();
-        }
-    }
+		g_switchAppCtx.times = 0;
+		if(g_switchAppCtx.oriSta){
+			light_on();
+		}else{
+			light_off();
+		}
+	}
 }
 
 void cmdSendReport()
 {
 	//printf("cmdSendReport\n");
     if(zb_isDeviceJoinedNwk()){
-    	//light_blink_start(5, 500, 500);
         epInfo_t dstEpInfo;
         TL_SETSTRUCTCONTENT(dstEpInfo, 0);
 
@@ -171,7 +166,6 @@ void cmdToggle(void)
 	// printf("cmdToggle\n");
 	if(zb_isDeviceJoinedNwk())
 	{
-		//light_blink_start(1, 500, 0);
 		epInfo_t dstEpInfo;
 		TL_SETSTRUCTCONTENT(dstEpInfo, 0);
 
@@ -277,16 +271,16 @@ s32 battVoltageCb(void *arg) {
 void buttonKeepPressed(u8 btNum) {
     if(btNum == VK_SW1) {
     	printf("Button keep pressed SW1\n");
-    	light_blink_stop();
-    	light_blink_start(255, 300, 300);
+    	led_blink_stop(LED1);
+    	led_blink_start(LED1, 255, 300, 300);
         g_switchAppCtx.state = APP_FACTORY_NEW_DOING;
         zb_factoryReset();
         //not really sure it needed
         zb_resetDevice();
     }else if(btNum == VK_SW2) {
     	printf("Button keep pressed SW2\n");
-    	light_blink_stop();
-    	light_blink_start(255, 200, 200);
+    	led_blink_stop(LED2);
+    	led_blink_start(LED2, 255, 200, 200);
     	g_switchAppCtx.state = APP_STATE_HOLD_PROCESSED_SW2;
     	cmdMoveOnOff();
     }
@@ -295,11 +289,11 @@ void buttonKeepPressed(u8 btNum) {
 void buttonShortPressed(u8 btNum){
     if(btNum == VK_SW1){
     	printf("Button short press SW1\n");
-    	light_blink_start(5,300,700);
+    	led_blink_start(LED1, 5,300,700);
     	cmdSendReport();
     }else if(btNum == VK_SW2){
     	printf("Button short press SW2\n");
-    	light_blink_start(1, 3000, 0);
+    	led_blink_start(LED2, 1, 3000, 0);
     }
 }
 
@@ -325,16 +319,16 @@ void keyScan_keyPressedCB(kb_data_t *kbEvt){
 void keyScan_keyReleasedCB(u8 keyCode){
 	if((keyCode == VK_SW1) && (g_switchAppCtx.state == APP_FACTORY_NEW_SET_CHECK))
 	{
-		light_blink_stop();
+		led_blink_stop(LED1);
 	}
 	if((keyCode == VK_SW2) && (g_switchAppCtx.state == APP_STATE_HOLD_SW2))  {
 		cmdToggle();
-		light_blink_stop();
+		led_blink_stop(LED2);
 	}
 
     if((keyCode == VK_SW2) && (g_switchAppCtx.state == APP_STATE_HOLD_PROCESSED_SW2))  {
     	cmdStopWithOnOff();
-    	light_blink_stop();
+    	led_blink_stop(LED2);
     }
 
     g_switchAppCtx.state = APP_STATE_NORMAL;

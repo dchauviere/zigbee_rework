@@ -1,7 +1,7 @@
 /********************************************************************************************************
- * @file    tuyaSwitchEpCfg.c
+ * @file    switchEp1Cfg.c
  *
- * @brief   This is the source file for tuyaSwitchEpCfg
+ * @brief   This is the source file for switchEp1Cfg
  *
  * @author  Zigbee Group
  * @date    2021
@@ -103,7 +103,7 @@ const af_simple_descriptor_t tuyaSwitch_simpleDesc =
 {
 	HA_PROFILE_ID,                      	/* Application profile identifier */
 	HA_DEV_ONOFF_SWITCH,                	/* Application device identifier */
-	TUYA_SWITCH_ENDPOINT,                 /* Endpoint */
+	TUYA_SWITCH_ENDPOINT,                   /* Endpoint */
 	2,                                  	/* Application device version */
 	0,										/* Reserved */
 	TUYASWITCH_IN_CLUSTER_NUM,           	/* Application input cluster count */
@@ -123,7 +123,7 @@ zcl_basicAttr_t g_zcl_basicAttrs =
 	.manuName		= ZCL_BASIC_MFG_NAME,
 	.modelId		= ZCL_BASIC_MODEL_ID,
 	//.dateCode       = ZCL_BASIC_DATE_CODE,
-	.powerSource	= POWER_SOURCE_BATTERY,
+	.powerSource	= POWER_SOURCE_MAINS_1_PHASE,
 	.genDevClass    = 0x00,  //Lightning
 	.genDevType     = 0xe1,  //Wall Switch
 	.swBuildId		= ZCL_BASIC_SW_BUILD_ID,

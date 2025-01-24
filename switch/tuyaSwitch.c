@@ -185,11 +185,17 @@ void user_app_init(void)
 
 	/* register endPoint */
 	af_endpointRegister(TUYA_SWITCH_ENDPOINT, (af_simple_descriptor_t *)&tuyaSwitch_simpleDesc, zcl_rx_handler, NULL);
+	af_endpointRegister(SWITCH_ENDPOINT_2, (af_simple_descriptor_t *)&switch_simpleDesc, zcl_rx_handler, NULL);
 
 	zcl_reportingTabInit();
 
 	/* Register ZCL specific cluster information */
 	zcl_register(TUYA_SWITCH_ENDPOINT, TUYA_SWITCH_CB_CLUSTER_NUM, (zcl_specClusterInfo_t *)g_tuyaSwitchClusterList);
+
+#if ZCL_GP_SUPPORT
+	/* Initialize GP */
+	gp_init(TUYA_SWITCH_ENDPOINT);
+#endif
 
 #if ZCL_OTA_SUPPORT
     ota_init(OTA_TYPE_CLIENT, (af_simple_descriptor_t *)&tuyaSwitch_simpleDesc, &tuyaSwitch_otaInfo, &tuyaSwitch_otaCb);
@@ -204,7 +210,8 @@ void user_app_init(void)
 
 void led_init(void)
 {
-	light_init();
+	led_off(LED1);
+	led_off(LED2);
 }
 
 void report_handler(void)
@@ -249,7 +256,7 @@ static void tuyaSwitchSysException(void)
 #if 1
 	SYSTEM_RESET();
 #else
-	light_on();
+	led_on(LED1);
 	while(1);
 #endif
 }
@@ -268,7 +275,6 @@ void user_init(bool isRetention)
 	printf("user init(%d)\n", isRetention);
 	/* Initialize LEDs*/
 	led_init();
-	light_blink_start(2,500,500);
 
 
 #if PA_ENABLE
@@ -284,7 +290,7 @@ void user_init(bool isRetention)
 #endif
 
 	if(!isRetention){
-		light_blink_start(2,500,500);
+		led_blink_start(LED1,2,500,500);
 		/* Initialize Stack */
 		stack_init();
 

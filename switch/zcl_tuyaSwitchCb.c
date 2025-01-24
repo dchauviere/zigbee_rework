@@ -273,7 +273,7 @@ status_t tuyaSwitch_basicCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cm
 {
 	if(cmdId == ZCL_CMD_BASIC_RESET_FAC_DEFAULT){
 		//Reset all the attributes of all its clusters to factory defaults
-		//zcl_nv_attr_reset();
+		zcl_nv_attr_reset();
 	}
 
 	return ZCL_STA_SUCCESS;
@@ -315,12 +315,12 @@ void tuyaSwitch_zclIdentifyCmdHandler(u8 endpoint, u16 srcAddr, u16 identifyTime
 
 	if(identifyTime == 0){
 		tuyaSwitch_zclIdentifyTimerStop();
-		light_blink_stop();
+		led_blink_stop(LED1);
 	}else{
 		if(!identifyTimerEvt){
-printf("led_blink1 start \n");
-			light_blink_start(identifyTime, 500, 500);
-printf("timer8 start \n");
+			printf("led_blink1 start \n");
+			led_blink_start(LED1, identifyTime, 500, 500);
+			printf("timer8 start \n");
 			identifyTimerEvt = TL_ZB_TIMER_SCHEDULE(tuyaSwitch_zclIdentifyTimerCb, NULL, 1000);
 		}
 	}
@@ -342,22 +342,22 @@ static void tuyaSwitch_zcltriggerCmdHandler(zcl_triggerEffect_t *pTriggerEffect)
 
 	switch(effectId){
 		case IDENTIFY_EFFECT_BLINK:
-			light_blink_start(1, 500, 500);
+			led_blink_start(LED1, 1, 500, 500);
 			break;
 		case IDENTIFY_EFFECT_BREATHE:
-			light_blink_start(15, 300, 700);
+			led_blink_start(LED1, 15, 300, 700);
 			break;
 		case IDENTIFY_EFFECT_OKAY:
-			light_blink_start(2, 250, 250);
+			led_blink_start(LED1, 2, 250, 250);
 			break;
 		case IDENTIFY_EFFECT_CHANNEL_CHANGE:
-			light_blink_start(1, 500, 7500);
+			led_blink_start(LED1,1, 500, 7500);
 			break;
 		case IDENTIFY_EFFECT_FINISH_EFFECT:
-			light_blink_start(1, 300, 700);
+			led_blink_start(LED1, 1, 300, 700);
 			break;
 		case IDENTIFY_EFFECT_STOP_EFFECT:
-			light_blink_stop();
+			led_blink_stop(LED1);
 			break;
 		default:
 			break;
@@ -872,7 +872,7 @@ void tuyaSwitch_zclBatterySensorRate(void)
 		if(!g_switchAppCtx.timerBattEvt){
 			printf("tuyaSwitch_zclLightBatteryRate time 0x%x %x 1/4 s\n", (u16)((pPollCtrlAttr->chkBattInterval &0xffff0000)>>16), (u16)(pPollCtrlAttr->chkBattInterval&0xffff));
 			g_switchAppCtx.timerBattEvt = TL_ZB_TIMER_SCHEDULE(battVoltageCb, NULL, pPollCtrlAttr->chkBattInterval);
-
+		
 		}
 //	}
 }

@@ -76,7 +76,7 @@ extern "C" {
 #define MODULE_WATCHDOG_ENABLE						0
 
 /* UART module */
-#define	MODULE_UART_ENABLE							1
+#define	MODULE_UART_ENABLE							0
 
 #if (ZBHCI_USB_PRINT || ZBHCI_USB_CDC || ZBHCI_USB_HID || ZBHCI_UART)
 	#define ZBHCI_EN								1
@@ -93,6 +93,7 @@ extern "C" {
 #define ZCL_OTA_SUPPORT								1
 #define ZCL_POWER_CFG_SUPPORT                       1
 #define ZCL_POLL_CTRL_SUPPORT						1
+#define ZCL_GP_SUPPORT								0
 
 #if TOUCHLINK_SUPPORT
 #define ZCL_ZLL_COMMISSIONING_SUPPORT				1

@@ -65,6 +65,8 @@ extern "C" {
 #define LED_OFF						1//0
 #define HAVE_1_LED                  1
 
+#define LEDS_NUM					2
+
 // #define UART_ENABLE 1
 
 // UART

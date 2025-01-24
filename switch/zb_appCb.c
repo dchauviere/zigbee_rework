@@ -174,7 +174,7 @@ void zbdemo_bdbCommissioningCb(u8 status, void *arg){
 
 	switch(status){
 		case BDB_COMMISSION_STA_SUCCESS:
-			light_blink_start(2, 200, 200);
+			led_blink_stop(LED1);
 
 			zb_setPollRate(POLL_RATE * 3);
 
