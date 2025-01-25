@@ -39,6 +39,9 @@ extern "C" {
 /**********************************************************************
  * Product Information
  */
+/* Debug mode config */
+#define	UART_PRINTF_MODE				0
+#define USB_PRINTF_MODE         		0
 
 /* PM */
 #define PM_ENABLE						0
@@ -46,10 +49,77 @@ extern "C" {
 /* PA */
 #define PA_ENABLE						0
 
+/* 32K RC or External 32K crystal */
+#define CLOCK_32K_EXT_CRYSTAL			0
+
 /* BDB */
 #define TOUCHLINK_SUPPORT				0
 #define FIND_AND_BIND_SUPPORT			1
 
+/* Board ID */
+#define BOARD_826x_EVK					0
+#define BOARD_826x_DONGLE				1
+#define BOARD_826x_DONGLE_PA			2
+#define BOARD_8258_EVK					3
+#define BOARD_8258_EVK_V1P2				4//C1T139A30_V1.2
+#define BOARD_8258_DONGLE				5
+#define BOARD_8278_EVK					6
+#define BOARD_8278_DONGLE				7
+#define BOARD_B91_EVK					8
+#define BOARD_B91_DONGLE				9
+#define BOARD_B92_EVK					10
+#define BOARD_B92_DONGLE				11
+#define BOARD_8258_TS0012               12
+
+/* Board define */
+#if defined(MCU_CORE_826x)
+	#define CLOCK_SYS_CLOCK_HZ  		32000000
+#elif defined(MCU_CORE_8258)
+#if (CHIP_TYPE == TLSR_8258_1M)
+	#define FLASH_CAP_SIZE_1M			1
+#endif
+	#define CLOCK_SYS_CLOCK_HZ  		48000000
+#elif defined(MCU_CORE_8278)
+	#define FLASH_CAP_SIZE_1M			1
+	#define CLOCK_SYS_CLOCK_HZ  		48000000
+#elif defined(MCU_CORE_B91)
+	#define FLASH_CAP_SIZE_1M			1
+	#define CLOCK_SYS_CLOCK_HZ  		48000000
+#elif defined(MCU_CORE_B92)
+	#define FLASH_CAP_SIZE_1M			1
+	#define CLOCK_SYS_CLOCK_HZ  		48000000
+#else
+	#error "MCU is undefined!"
+#endif
+
+/* Board include */
+#if (BOARD == BOARD_826x_EVK)
+	#include "board_826x_evk.h"
+#elif (BOARD == BOARD_826x_DONGLE)
+	#include "board_826x_dongle.h"
+#elif (BOARD == BOARD_826x_DONGLE_PA)
+	#include "board_826x_dongle_pa.h"
+#elif (BOARD == BOARD_8258_DONGLE)
+	#include "board_8258_dongle.h"
+#elif (BOARD == BOARD_8258_EVK)
+	#include "board_8258_evk.h"
+#elif (BOARD == BOARD_8258_EVK_V1P2)
+	#include "board_8258_evk_v1p2.h"
+#elif (BOARD == BOARD_8278_EVK)
+	#include "board_8278_evk.h"
+#elif (BOARD == BOARD_8278_DONGLE)
+	#include "board_8278_dongle.h"
+#elif (BOARD == BOARD_B91_EVK)
+	#include "board_b91_evk.h"
+#elif (BOARD == BOARD_B91_DONGLE)
+	#include "board_b91_dongle.h"
+#elif (BOARD == BOARD_B92_EVK)
+	#include "board_b92_evk.h"
+#elif (BOARD == BOARD_B92_DONGLE)
+	#include "board_b92_dongle.h"
+#elif (BOARD == BOARD_8258_TS0012)
+	#include "board_8258_ts0012.h"
+#endif
 
 
 /* Voltage detect module */
@@ -62,15 +132,14 @@ extern "C" {
  * we need to configure the detection IO port, and the IO must be connected to the target under test,
  * such as VCC.
  */
-#define VOLTAGE_DETECT_ENABLE						1
+#define VOLTAGE_DETECT_ENABLE						0
+#define VOLTAGE_DETECT_ADC_PIN						VOLTAGE_DETECT_PIN
 
-#if defined(MCU_CORE_826x)
-	#define VOLTAGE_DETECT_ADC_PIN					0
-#elif defined(MCU_CORE_8258) || defined(MCU_CORE_8278)
-	#define VOLTAGE_DETECT_ADC_PIN					GPIO_PC5
-#elif defined(MCU_CORE_B91)
-	#define VOLTAGE_DETECT_ADC_PIN					ADC_GPIO_PB0
-#endif
+/* Flash protect module */
+/* Only the firmware area will be locked, the NV data area will not be locked.
+ * For details, please refer to drv_flash.c file.
+ */
+#define FLASH_PROTECT_ENABLE						1
 
 /* Watch dog module */
 #define MODULE_WATCHDOG_ENABLE						0
@@ -91,27 +160,11 @@ extern "C" {
 #define ZCL_LIGHT_COLOR_CONTROL_SUPPORT				1
 #define ZCL_GROUP_SUPPORT							1
 #define ZCL_OTA_SUPPORT								1
-#define ZCL_POWER_CFG_SUPPORT                       1
-#define ZCL_POLL_CTRL_SUPPORT						1
-#define ZCL_GP_SUPPORT								0
-
 #if TOUCHLINK_SUPPORT
 #define ZCL_ZLL_COMMISSIONING_SUPPORT				1
 #endif
-#define MY_OTA_PERIODIC_QUERY_INTERVAL (12*60*60U) //seconds
 
-/**********************************************************************
- * ZCL defaults setting
- */
 
-/* POLL CONTROL defaults */
-/* default values from ZCL 7 */
-#define POLL_CTL_DEFAULT_CHECKIN_INTERVAL           0x3840  // 1 hour
-#define POLL_CTL_DEFAULT_LONG_POLL_INTERVAL         0x14    // 5 sec
-#define POLL_CTL_DEFAULT_SHORT_POLL_INTERVAL        0x02    // 2 qs = 0.5 sec
-#define POLL_CTL_DEFAULT_FAST_POLL_INTERVAL         0x28    // 10 sec
-
-#define POLL_CTL_DEFAULT_BATTERY_CHECK_INTERVAL     5000    // 5s, in milliseconds
 /**********************************************************************
  * Stack configuration
  */

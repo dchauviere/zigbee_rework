@@ -7,7 +7,7 @@
  * @date    2021
  *
  * @par     Copyright (c) 2021, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
- *          All rights reserved.
+ *			All rights reserved.
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -28,11 +28,10 @@
 /**********************************************************************
  * INCLUDES
  */
-#include "../common/comm_cfg.h"
 #include "tl_common.h"
 #include "zb_api.h"
 #include "zcl_include.h"
-#include "tuyaSwitch.h"
+#include "sampleSwitch.h"
 #include "app_ui.h"
 
 /**********************************************************************
@@ -50,14 +49,12 @@
  */
 void led_on(u32 pin)
 {
-	//printf("LED%d on\n", pin);
-    drv_gpio_write(pin, LED_ON);
+	drv_gpio_write(pin, LED_ON);
 }
 
 void led_off(u32 pin)
 {
-	//printf("LED%d off\n", pin);
-    drv_gpio_write(pin, LED_OFF);
+	drv_gpio_write(pin, LED_OFF);
 }
 
 void light_on(void)
@@ -135,266 +132,147 @@ void light_blink_stop(void)
 	}
 }
 
-void cmdSendReport()
-{
-	//printf("cmdSendReport\n");
-    if(zb_isDeviceJoinedNwk()){
-        epInfo_t dstEpInfo;
-        TL_SETSTRUCTCONTENT(dstEpInfo, 0);
+/*******************************************************************
+ * @brief	Button click detect:
+ * 			SW1. keep press button1 5s === factory reset
+ * 			SW1. short press button1   === send level step with OnOff command (Up)
+ * 			SW2. short press button2   === send level step with OnOff command (Down)
+ *
+ */
+void buttonKeepPressed(u8 btNum){
+	if(btNum == VK_SW1){
+		g_switchAppCtx.state = APP_FACTORY_NEW_DOING;
+		zb_factoryReset();
+	}else if(btNum == VK_SW2){
 
-        dstEpInfo.profileId = HA_PROFILE_ID;
-#if FIND_AND_BIND_SUPPORT
-        dstEpInfo.dstAddrMode = APS_DSTADDR_EP_NOTPRESETNT;
-#else
-        /* fix for issue #21 - send report to coordinator only */
-        dstEpInfo.dstAddrMode = APS_SHORT_DSTADDR_WITHEP;
-        dstEpInfo.dstEp = TUYA_SWITCH_ENDPOINT;
-        dstEpInfo.dstAddr.shortAddr = 0x0; //send to coordinator
-#endif
-        //printf("Send Report\n");
-    	zclAttrInfo_t *pAttrEntry;
-    	pAttrEntry = zcl_findAttribute(TUYA_SWITCH_ENDPOINT, ZCL_CLUSTER_GEN_POWER_CFG, ZCL_ATTRID_BATTERY_VOLTAGE);
-    	zcl_sendReportCmd(TUYA_SWITCH_ENDPOINT, &dstEpInfo,  TRUE, ZCL_FRAME_SERVER_CLIENT_DIR,
-    			ZCL_CLUSTER_GEN_POWER_CFG, pAttrEntry->id, pAttrEntry->type, pAttrEntry->data);
-    	pAttrEntry = zcl_findAttribute(TUYA_SWITCH_ENDPOINT, ZCL_CLUSTER_GEN_POWER_CFG, ZCL_ATTRID_BATTERY_PERCENTAGE_REMAINING);
-        zcl_sendReportCmd(TUYA_SWITCH_ENDPOINT, &dstEpInfo,  TRUE, ZCL_FRAME_SERVER_CLIENT_DIR,
-				ZCL_CLUSTER_GEN_POWER_CFG, pAttrEntry->id, pAttrEntry->type, pAttrEntry->data);
-    }
-}
-void cmdToggle(void)
-{
-	// printf("cmdToggle\n");
-	if(zb_isDeviceJoinedNwk())
-	{
-		epInfo_t dstEpInfo;
-		TL_SETSTRUCTCONTENT(dstEpInfo, 0);
-
-		dstEpInfo.profileId = HA_PROFILE_ID;
-#if FIND_AND_BIND_SUPPORT
-		dstEpInfo.dstAddrMode = APS_DSTADDR_EP_NOTPRESETNT;
-#else
-        //printf("cmdToggle fill addr \n");
-        /* fix for issue #21 - send report to binded only */
-        dstEpInfo.dstAddrMode = APS_DSTADDR_EP_NOTPRESETNT; /* send using data from binded table */
-#endif
-		zcl_onOff_toggleCmd(TUYA_SWITCH_ENDPOINT, &dstEpInfo, FALSE);
 	}
 }
 
-void cmdMoveOnOff(void)
+void set_detect_voltage(s32 v){
+    g_switchAppCtx.Vbat = v;
+}
+
+ev_timer_event_t *brc_toggleEvt = NULL;
+
+s32 brc_toggleCb(void *arg)
 {
-	//printf("cmdMoveOnOff\n");
-	if(zb_isDeviceJoinedNwk())
-	{
-		//static u8 lvl = 1;
-		static bool dir = 0;
+	epInfo_t dstEpInfo;
+	TL_SETSTRUCTCONTENT(dstEpInfo, 0);
 
-		epInfo_t dstEpInfo;
-		TL_SETSTRUCTCONTENT(dstEpInfo, 0);
+	dstEpInfo.dstAddrMode = APS_SHORT_DSTADDR_WITHEP;
+	dstEpInfo.dstEp = SAMPLE_SWITCH_ENDPOINT;
+	dstEpInfo.dstAddr.shortAddr = 0xfffc;
+	dstEpInfo.profileId = HA_PROFILE_ID;
 
-        //printf("cmdMoveOnOff fill addr\n");
-        /* fix for issue #21 - send report to binded only */
-        dstEpInfo.dstAddrMode = APS_DSTADDR_EP_NOTPRESETNT; /* send using data from binded table */
-		dstEpInfo.profileId = HA_PROFILE_ID;
+	zcl_onOff_toggleCmd(SAMPLE_SWITCH_ENDPOINT, &dstEpInfo, FALSE);
 
-		//moveToLvl_t move2Level;
+	return 0;
+}
 
-		//move2Level.optPresent = 0;
-		//move2Level.transitionTime = 0x0A;
-		//move2Level.level = lvl;
+void brc_toggle(void)
+{
+	if(!brc_toggleEvt){
+		brc_toggleEvt = TL_ZB_TIMER_SCHEDULE(brc_toggleCb, NULL, 1000);
+	}else{
+		TL_ZB_TIMER_CANCEL(&brc_toggleEvt);
+	}
+}
 
-		//zcl_level_move2levelCmd(TUYA_SWITCH_ENDPOINT, &dstEpInfo, FALSE, &move2Level);
-		move_t move;
+void buttonShortPressed(u8 btNum){
+	if(btNum == VK_SW1){
+		if(zb_isDeviceJoinedNwk()){
+#if 1
+			epInfo_t dstEpInfo;
+			TL_SETSTRUCTCONTENT(dstEpInfo, 0);
 
-		move.moveMode = dir;
-		move.rate = 20;
-		move.optPresent = 0;
+			dstEpInfo.profileId = HA_PROFILE_ID;
+#if FIND_AND_BIND_SUPPORT
+			dstEpInfo.dstAddrMode = APS_DSTADDR_EP_NOTPRESETNT;
+#else
+			dstEpInfo.dstAddrMode = APS_SHORT_DSTADDR_WITHEP;
+			dstEpInfo.dstEp = SAMPLE_SWITCH_ENDPOINT;
+			dstEpInfo.dstAddr.shortAddr = 0xfffc;
+#endif
+			zcl_onOff_toggleCmd(SAMPLE_SWITCH_ENDPOINT, &dstEpInfo, FALSE);
+#else
+			brc_toggle();
+#endif
+		}
+	}else if(btNum == VK_SW2){
+		if(zb_isDeviceJoinedNwk()){
+			static u8 lvl = 1;
+			static bool dir = 1;
 
-		zcl_level_moveWithOnOffCmd(TUYA_SWITCH_ENDPOINT, &dstEpInfo, FALSE, &move);
+			epInfo_t dstEpInfo;
+			TL_SETSTRUCTCONTENT(dstEpInfo, 0);
 
-		if(dir){
-//                lvl += 50;
-//                if(lvl >= 250){
-            dir = 0;
-//                }
-		}else{
-//                lvl -= 50;
-//                if(lvl <= 1){
-            dir = 1;
-//                }
+			dstEpInfo.dstAddrMode = APS_SHORT_DSTADDR_WITHEP;
+			dstEpInfo.dstEp = SAMPLE_SWITCH_ENDPOINT;
+			dstEpInfo.dstAddr.shortAddr = 0xfffc;
+			dstEpInfo.profileId = HA_PROFILE_ID;
+
+			moveToLvl_t move2Level;
+
+			move2Level.optPresent = 0;
+			move2Level.transitionTime = 0x0A;
+			move2Level.level = lvl;
+
+			zcl_level_move2levelCmd(SAMPLE_SWITCH_ENDPOINT, &dstEpInfo, FALSE, &move2Level);
+
+			if(dir){
+				lvl += 50;
+				if(lvl >= 250){
+					dir = 0;
+				}
+			}else{
+				lvl -= 50;
+				if(lvl <= 1){
+					dir = 1;
+				}
+			}
 		}
 	}
 }
 
-void cmdStopWithOnOff(void)
-{
-	//printf("cmdStop\n");
-    if(zb_isDeviceJoinedNwk())  {
-    	epInfo_t dstEpInfo;
-        TL_SETSTRUCTCONTENT(dstEpInfo, 0);
-
-        /* fix for issue #21 - send report to binded only */
-        dstEpInfo.dstAddrMode = APS_DSTADDR_EP_NOTPRESETNT; /* send using data from binded table */
-        dstEpInfo.profileId = HA_PROFILE_ID;
-
-        stop_t stop;
-        stop.optPresent = 0;
-
-        zcl_level_stopWithOnOffCmd(TUYA_SWITCH_ENDPOINT, &dstEpInfo, FALSE, &stop);
-    }
-}
-
-s32 battVoltageCb(void *arg) {
-	u16 voltage, percentage;
-	u8 converted_voltage, percentage2;
-	voltage = drv_get_adc_data();
-	//printf("voltage %d\n", voltage);
-	converted_voltage = (u8)(voltage/100);
-	percentage = ((voltage - BATTERY_SAFETY_THRESHOLD)/4);
-	if (percentage > 0xc8) percentage=0xc8;
-	percentage2 = (u8)percentage;
-	//printf("converted voltage %d diff %d", converted_voltage, (voltage - BATTERY_SAFETY_THRESHOLD));
-	//printf(" , percentage2 %d\n", percentage2);
-	zcl_setAttrVal(TUYA_SWITCH_ENDPOINT, ZCL_CLUSTER_GEN_POWER_CFG, ZCL_ATTRID_BATTERY_VOLTAGE, &converted_voltage);
-	zcl_setAttrVal(TUYA_SWITCH_ENDPOINT, ZCL_CLUSTER_GEN_POWER_CFG, ZCL_ATTRID_BATTERY_PERCENTAGE_REMAINING, &percentage2);
-	return 0;
-}
-
-/*******************************************************************
- * @brief   Button click detect:
- *          SW1. keep press button1 5s === factory reset
- *          SW1. short press button1   === send report
- *          SW2. keep press button2 3s === send move (1st hold - up, 2nd hold - down)
- *          SW2. short press button2   === send toggle (on release)
- *
- */
-void buttonKeepPressed(u8 btNum) {
-    if(btNum == VK_SW1) {
-    	printf("Button keep pressed SW1\n");
-    	led_blink_stop(LED1);
-    	led_blink_start(LED1, 255, 300, 300);
-        g_switchAppCtx.state = APP_FACTORY_NEW_DOING;
-        zb_factoryReset();
-        //not really sure it needed
-        zb_resetDevice();
-    }else if(btNum == VK_SW2) {
-    	printf("Button keep pressed SW2\n");
-    	led_blink_stop(LED2);
-    	led_blink_start(LED2, 255, 200, 200);
-    	g_switchAppCtx.state = APP_STATE_HOLD_PROCESSED_SW2;
-    	cmdMoveOnOff();
-    }
-}
-
-void buttonShortPressed(u8 btNum){
-    if(btNum == VK_SW1){
-    	printf("Button short press SW1\n");
-    	led_blink_start(LED1, 5,300,700);
-    	cmdSendReport();
-    }else if(btNum == VK_SW2){
-    	printf("Button short press SW2\n");
-    	led_blink_start(LED2, 1, 3000, 0);
-    }
-}
-
 
 void keyScan_keyPressedCB(kb_data_t *kbEvt){
-    //u8 toNormal = 0;
-    u8 keyCode = kbEvt->keycode[0];
-    //static u8 lastKeyCode = 0xff;
+	//u8 toNormal = 0;
+	u8 keyCode = kbEvt->keycode[0];
+	//static u8 lastKeyCode = 0xff;
 
-    buttonShortPressed(keyCode);
+	buttonShortPressed(keyCode);
 
-    if(keyCode == VK_SW1){
-        g_switchAppCtx.keyPressedTime = clock_time();
-        g_switchAppCtx.state = APP_FACTORY_NEW_SET_CHECK;
-    }
-    if(keyCode == VK_SW2){
-        g_switchAppCtx.keyPressedTime = clock_time();
-        g_switchAppCtx.state = APP_STATE_HOLD_SW2;
-    }
+	if(keyCode == VK_SW1){
+		g_switchAppCtx.keyPressedTime = clock_time();
+		g_switchAppCtx.state = APP_FACTORY_NEW_SET_CHECK;
+	}
 }
 
 
 void keyScan_keyReleasedCB(u8 keyCode){
-	if((keyCode == VK_SW1) && (g_switchAppCtx.state == APP_FACTORY_NEW_SET_CHECK))
-	{
-		led_blink_stop(LED1);
-	}
-	if((keyCode == VK_SW2) && (g_switchAppCtx.state == APP_STATE_HOLD_SW2))  {
-		cmdToggle();
-		led_blink_stop(LED2);
-	}
-
-    if((keyCode == VK_SW2) && (g_switchAppCtx.state == APP_STATE_HOLD_PROCESSED_SW2))  {
-    	cmdStopWithOnOff();
-    	led_blink_stop(LED2);
-    }
-
-    g_switchAppCtx.state = APP_STATE_NORMAL;
+	g_switchAppCtx.state = APP_STATE_NORMAL;
 }
 
 void app_key_handler(void){
-    static u8 valid_keyCode = 0xff;
-    if(g_switchAppCtx.state == APP_FACTORY_NEW_SET_CHECK){
-        if(clock_time_exceed(g_switchAppCtx.keyPressedTime, 5*1000*1000)){
-            buttonKeepPressed(VK_SW1);
-        }
-    }
-    if(g_switchAppCtx.state == APP_STATE_HOLD_SW2){
-        if(clock_time_exceed(g_switchAppCtx.keyPressedTime, 3*1000*1000)){
-            buttonKeepPressed(VK_SW2);
-        }
-    }
-    if(kb_scan_key(0, 1)){//if 1 keyboard update detected
-        if(kb_event.cnt){ //number of keys currently pressed
-            g_switchAppCtx.keyPressed = 1;
-            keyScan_keyPressedCB(&kb_event);
-            if(kb_event.cnt == 1){
-                valid_keyCode = kb_event.keycode[0];
-            }
-        }else{
-            keyScan_keyReleasedCB(valid_keyCode);
-            valid_keyCode = 0xff;
-            g_switchAppCtx.keyPressed = 0;
-        }
-    }
-    if(gpio_read(BUTTON1)) {
-    	if (g_switchAppCtx.btn1State == BUTTON_RELEASED) { //button pressed 1st cycle for debounce
-    		g_switchAppCtx.btn1State = BUTTON_START_DEBOUNCE_PRESS;
-    	}
-    	if (g_switchAppCtx.btn1State == BUTTON_START_DEBOUNCE_RELEASE) { //button release debounce failed
-    		g_switchAppCtx.btn1State = BUTTON_PRESSED;
-    	}
-    	if (g_switchAppCtx.btn1State == BUTTON_START_DEBOUNCE_PRESS) { //button pressed 2nd cycle
-    		g_switchAppCtx.btn1State = BUTTON_PRESSED;
-    		//printf("btn1 pressed \n");
-            g_switchAppCtx.keyPressed = 1;
-            kb_event.keycode[0] = VK_SW1;
-            kb_event.cnt = 1;
-            keyScan_keyPressedCB(&kb_event);
-            if(kb_event.cnt == 1){
-                valid_keyCode = kb_event.keycode[0];
-            }
-    	}
-    }
-    else {
-    	if (g_switchAppCtx.btn1State == BUTTON_PRESSED) { //button released 1st cycle for debounce
-    		g_switchAppCtx.btn1State = BUTTON_START_DEBOUNCE_RELEASE;
-    	}
-    	if (g_switchAppCtx.btn1State == BUTTON_START_DEBOUNCE_PRESS) { //button pressed debounce failed
-    		g_switchAppCtx.btn1State = BUTTON_RELEASED;
-    	}
-    	if (g_switchAppCtx.btn1State == BUTTON_START_DEBOUNCE_RELEASE) { //button released 2nd cycle
-    		g_switchAppCtx.btn1State = BUTTON_RELEASED;
-    		//printf("btn1 released \n");
-    		kb_event.cnt = 0;
-            keyScan_keyReleasedCB(valid_keyCode);
-            valid_keyCode = 0xff;
-            g_switchAppCtx.keyPressed = 0;
-    	}
-    }
-
+	static u8 valid_keyCode = 0xff;
+	if(g_switchAppCtx.state == APP_FACTORY_NEW_SET_CHECK){
+		if(clock_time_exceed(g_switchAppCtx.keyPressedTime, 5*1000*1000)){
+			buttonKeepPressed(VK_SW1);
+		}
+	}
+	if(kb_scan_key(0, 1)){
+		if(kb_event.cnt){
+			g_switchAppCtx.keyPressed = 1;
+			keyScan_keyPressedCB(&kb_event);
+			if(kb_event.cnt == 1){
+				valid_keyCode = kb_event.keycode[0];
+			}
+		}else{
+			keyScan_keyReleasedCB(valid_keyCode);
+			valid_keyCode = 0xff;
+			g_switchAppCtx.keyPressed = 0;
+		}
+	}
 }
 
 #endif  /* __PROJECT_TL_SWITCH__ */

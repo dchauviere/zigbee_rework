@@ -59,36 +59,19 @@ extern "C" {
 #define PC0_INPUT_ENABLE			0
 
 #define LED_POWER					LED1
-#define LED_PERMIT					LED2
 
-#define LED_ON						0//1
-#define LED_OFF						1//0
-#define HAVE_1_LED                  1
+#define	PM_WAKEUP_LEVEL		  		PM_WAKEUP_LEVEL_LOW
 
-#define LEDS_NUM					2
-
-// #define UART_ENABLE 1
+#define VOLTAGE_DETECT_PIN			GPIO_PC5
 
 // UART
-#if UART_ENABLE
-	#define UART_TX_PIN         	UART_TX_PB1
-	#define UART_RX_PIN         	UART_RX_PB7
-
-	#define UART_PIN_CFG()			uart_gpio_set(UART_TX_PIN, UART_RX_PIN);// uart tx/rx pin set
+#if ZBHCI_UART
+	#error please configurate uart PIN!!!!!!
 #endif
-
-#define	UART_PRINTF_MODE				1
 
 // DEBUG
 #if UART_PRINTF_MODE
 	#define	DEBUG_INFO_TX_PIN	    GPIO_PC1//print
-#endif
-
-// USB
-#if ZBHCI_USB_PRINT || ZBHCI_USB_CDC || ZBHCI_USB_HID
-	#define HW_USB_CFG()			do{ \
-										usb_set_pin_en();	\
-									}while(0)
 #endif
 
 #if !defined(__ASSEMBLER__)
@@ -103,15 +86,8 @@ enum{
 #define	KB_MAP_NUM		KB_MAP_NORMAL
 #define	KB_MAP_FN		KB_MAP_NORMAL
 
-#define KB_DRIVE_PINS  {NULL }
+#define KB_DRIVE_PINS  {0}
 #define KB_SCAN_PINS   {BUTTON1,  BUTTON2}
-
-#define IMAGE_TYPE                          ((CHIP_TYPE << 8) | IMAGE_TYPE_BOOTLOADER) //0x03FF
-//zigbee model id
-#define ZCL_BASIC_MODEL_ID          {20,'F','i','x','e','d','_','Z','S','-','E','U','B','2','_','T','S','0','0','1','2'}
-
-//
-#define HARDWARE_REV                0x01
 
 /* Disable C linkage for C++ Compilers: */
 #if defined(__cplusplus)

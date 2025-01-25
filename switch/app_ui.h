@@ -26,11 +26,12 @@
 #ifndef _APP_UI_H_
 #define _APP_UI_H_
 
-#include "../common/comm_cfg.h"
-
 /**********************************************************************
  * CONSTANT
  */
+#define LED_ON						1
+#define LED_OFF						0
+
 
 /**********************************************************************
  * TYPEDEFS
@@ -38,27 +39,23 @@
 enum{
 	APP_STATE_NORMAL,
 	APP_FACTORY_NEW_SET_CHECK,
-	APP_FACTORY_NEW_DOING,
-	APP_STATE_HOLD_SW2,
-	APP_STATE_HOLD_PROCESSED_SW2
+	APP_FACTORY_NEW_DOING
 };
-enum{
-	BUTTON_RELEASED,
-	BUTTON_START_DEBOUNCE_PRESS,
-	BUTTON_START_DEBOUNCE_RELEASE,
-	BUTTON_PRESSED
-};
+
 
 /**********************************************************************
  * FUNCTIONS
  */
+void light_blink_start(u8 times, u16 ledOnTime, u16 ledOffTime);
+void light_blink_stop(void);
 
-void app_key_handler(void);
-void localPermitJoinState(void);
-s32 battVoltageCb(void *arg);
+void light_init(void);
+void light_on(void);
+void light_off(void);
+
 void led_on(u32 pin);
 void led_off(u32 pin);
-void led_blink_start(u32 pin, u8 times, u16 ledOnTime, u16 ledOffTime);
-void led_blink_stop(u32 pin);
+
+void app_key_handler(void);
 
 #endif	/* _APP_UI_H_ */
