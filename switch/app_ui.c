@@ -47,6 +47,16 @@
 /**********************************************************************
  * LOCAL FUNCTIONS
  */
+void relay_on(u32 pin)
+{
+	drv_gpio_write(pin, RELAY_ON);
+}
+
+void relay_off(u32 pin)
+{
+	drv_gpio_write(pin, RELAY_OFF);
+}
+
 void led_on(u32 pin)
 {
 	drv_gpio_write(pin, LED_ON);
@@ -206,10 +216,14 @@ void buttonShortPressed(u8 btNum){
 			epInfo_t dstEpInfo;
 			TL_SETSTRUCTCONTENT(dstEpInfo, 0);
 
+			dstEpInfo.profileId = HA_PROFILE_ID;
+#if FIND_AND_BIND_SUPPORT
+			dstEpInfo.dstAddrMode = APS_DSTADDR_EP_NOTPRESETNT;
+#else
 			dstEpInfo.dstAddrMode = APS_SHORT_DSTADDR_WITHEP;
 			dstEpInfo.dstEp = SAMPLE_SWITCH_ENDPOINT;
 			dstEpInfo.dstAddr.shortAddr = 0xfffc;
-			dstEpInfo.profileId = HA_PROFILE_ID;
+#endif
 
 			moveToLvl_t move2Level;
 

@@ -32,6 +32,9 @@
 #define LED_ON						1
 #define LED_OFF						0
 
+#define RELAY_ON						1
+#define RELAY_OFF						0
+
 
 /**********************************************************************
  * TYPEDEFS
@@ -55,6 +58,9 @@ void light_off(void);
 
 void led_on(u32 pin);
 void led_off(u32 pin);
+
+void relay_on(u32 pin);
+void relay_off(u32 pin);
 
 void app_key_handler(void);
 

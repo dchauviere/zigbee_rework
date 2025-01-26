@@ -137,6 +137,7 @@ drv_pm_pinCfg_t g_switchPmCfg[] = {
  * LOCAL VARIABLES
  */
 
+ev_timer_event_t *sampleSwitchAttrsStoreTimerEvt = NULL;
 
 /**********************************************************************
  * FUNCTIONS
@@ -178,12 +179,17 @@ void user_app_init(void)
 	af_powerDescPowerModeUpdate(POWER_MODE_RECEIVER_COMES_WHEN_STIMULATED);
 #endif
 
+	af_nodeDescManuCodeUpdate(MANUFACTURER_CODE_TELINK);
+
     /* Initialize ZCL layer */
 	/* Register Incoming ZCL Foundation command/response messages */
 	zcl_init(sampleSwitch_zclProcessIncomingMsg);
 
 	/* register endPoint */
 	af_endpointRegister(SAMPLE_SWITCH_ENDPOINT, (af_simple_descriptor_t *)&sampleSwitch_simpleDesc, zcl_rx_handler, NULL);
+
+	zcl_sampleSwitchAttrsInit();
+	zcl_reportingTabInit();
 
 	/* Register ZCL specific cluster information */
 	zcl_register(SAMPLE_SWITCH_ENDPOINT, SAMPLE_SWITCH_CB_CLUSTER_NUM, (zcl_specClusterInfo_t *)g_sampleSwitchClusterList);
@@ -193,7 +199,31 @@ void user_app_init(void)
 #endif
 }
 
+s32 sampleSwitchAttrsStoreTimerCb(void *arg)
+{
+	zcl_onOffAttr_save();
 
+	sampleSwitchAttrsStoreTimerEvt = NULL;
+	return -1;
+}
+
+void sampleSwitchAttrsStoreTimerStart(void)
+{
+	if(sampleSwitchAttrsStoreTimerEvt){
+		TL_ZB_TIMER_CANCEL(&sampleSwitchAttrsStoreTimerEvt);
+	}
+	sampleSwitchAttrsStoreTimerEvt = TL_ZB_TIMER_SCHEDULE(sampleSwitchAttrsStoreTimerCb, NULL, 200);
+}
+
+void sampleSwitchAttrsChk(void)
+{
+	if(g_switchAppCtx.switchAttrsChanged){
+		g_switchAppCtx.switchAttrsChanged = FALSE;
+		if(zb_isDeviceJoinedNwk()){
+			sampleSwitchAttrsStoreTimerStart();
+		}
+	}
+}
 
 void led_init(void)
 {
@@ -205,6 +235,7 @@ void app_task(void)
 	app_key_handler();
 
 	if(bdb_isIdle()){
+		report_handler();
 #if PM_ENABLE
 		app_key_handler();
 		
@@ -217,6 +248,7 @@ void app_task(void)
 
 static void sampleSwitchSysException(void)
 {
+	zcl_onOffAttr_save();
 #if 1
 	SYSTEM_RESET();
 #else
@@ -274,6 +306,11 @@ void user_init(bool isRetention)
 		}
 
 		bdb_findBindMatchClusterSet(FIND_AND_BIND_CLUSTER_NUM, bdb_findBindClusterList);
+
+	    /* Set default reporting configuration */
+    	u8 reportableChange = 0x00;
+    	bdb_defaultReportingCfg(SAMPLE_SWITCH_ENDPOINT, HA_PROFILE_ID, ZCL_CLUSTER_GEN_ON_OFF, ZCL_ATTRID_ONOFF,
+    						0x0000, 0x003c, (u8 *)&reportableChange);
 
 		/* Initialize BDB */
 		u8 repower = drv_pm_deepSleep_flag_get() ? 0 : 1;

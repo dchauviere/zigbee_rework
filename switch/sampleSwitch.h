@@ -55,6 +55,7 @@ typedef struct{
 	u8  state;
 
 	u8  keyPressed;
+	bool switchAttrsChanged;
 
 	app_linkKey_info_t tcLinkKey;
 }app_ctx_t;
@@ -69,6 +70,7 @@ typedef struct{
 	u8	hwVersion;
 	u8	manuName[ZCL_BASIC_MAX_LENGTH];
 	u8	modelId[ZCL_BASIC_MAX_LENGTH];
+	u8	swBuildId[ZCL_BASIC_MAX_LENGTH];
 	u8	powerSource;
 	u8	deviceEnable;
 }zcl_basicAttr_t;
@@ -79,6 +81,35 @@ typedef struct{
 typedef struct{
 	u16	identifyTime;
 }zcl_identifyAttr_t;
+
+/**
+ *  @brief Defined for group cluster attributes
+ */
+typedef struct{
+	u8	nameSupport;
+}zcl_groupAttr_t;
+
+/**
+ *  @brief Defined for scene cluster attributes
+ */
+typedef struct{
+	u8	 sceneCount;
+	u8	 currentScene;
+	u8	 nameSupport;
+	bool sceneValid;
+	u16	 currentGroup;
+}zcl_sceneAttr_t;
+
+/**
+ *  @brief Defined for on/off cluster attributes
+ */
+typedef struct{
+	u16	 onTime;
+	u16	 offWaitTime;
+	u8	 startUpOnOff;
+	bool onOff;
+	bool globalSceneControl;
+}zcl_onOffAttr_t;
 
 /**
  *  @brief  Defined for poll control cluster attributes
@@ -92,6 +123,14 @@ typedef struct{
 	u16	fastPollTimeout;
 	u16	fastPollTimeoutMax;
 }zcl_pollCtrlAttr_t;
+
+/**
+ *  @brief Defined for saving on/off attributes
+ */
+typedef struct {
+	u8	onOff;
+	u8	startUpOnOff;
+}zcl_nv_onOff_t;
 
 /**********************************************************************
  * GLOBAL VARIABLES
@@ -109,8 +148,13 @@ extern const af_simple_descriptor_t sampleSwitch_simpleDesc;
 /* Attributes */
 extern zcl_basicAttr_t g_zcl_basicAttrs;
 extern zcl_identifyAttr_t g_zcl_identifyAttrs;
+extern zcl_groupAttr_t g_zcl_groupAttrs;
+extern zcl_sceneAttr_t g_zcl_sceneAttrs;
+extern zcl_onOffAttr_t g_zcl_onOffAttrs;
 extern zcl_pollCtrlAttr_t g_zcl_pollCtrlAttrs;
 
+#define zcl_sceneAttrGet()		&g_zcl_sceneAttrs
+#define zcl_onoffAttrGet()		&g_zcl_onOffAttrs
 #define zcl_pollCtrlAttrGet()	&g_zcl_pollCtrlAttrs
 /**********************************************************************
  * FUNCTIONS
@@ -121,10 +165,17 @@ status_t sampleSwitch_basicCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *
 status_t sampleSwitch_identifyCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPayload);
 status_t sampleSwitch_groupCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPayload);
 status_t sampleSwitch_sceneCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPayload);
+status_t sampleSwitch_onOffCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPayload);
 status_t sampleSwitch_pollCtrlCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPayload);
+
+void sampleSwitch_onoff(u8 cmd);
+void sampleSwitch_onOffUpdate(u8 cmd);
 
 void sampleSwitch_leaveCnfHandler(nlme_leave_cnf_t *pLeaveCnf);
 void sampleSwitch_leaveIndHandler(nlme_leave_ind_t *pLeaveInd);
 void sampleSwitch_otaProcessMsgHandler(u8 evt, u8 status);
+
+void zcl_sampleSwitchAttrsInit(void);
+nv_sts_t zcl_onOffAttr_save(void);
 
 #endif /* _SAMPLE_SWITCH_H_ */

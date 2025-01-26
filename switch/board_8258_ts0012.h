@@ -45,6 +45,19 @@ extern "C" {
 #define PB6_INPUT_ENABLE	  		1
 #define	PULL_WAKEUP_SRC_PB6	  		PM_PIN_PULLUP_10K
 
+// RELAY
+// GPIO_B4 ?
+#define RELAY1     					GPIO_PD2
+#define PD2_FUNC					AS_GPIO
+#define PD2_OUTPUT_ENABLE			1
+#define PD2_INPUT_ENABLE			0
+
+// GPIO_D7 ?
+#define RELAY2     					GPIO_PD7
+#define PD7_FUNC					AS_GPIO
+#define PD7_OUTPUT_ENABLE			1
+#define PD7_INPUT_ENABLE			0
+
 // LED
 // GPIO_D3
 #define LED1     					GPIO_PD3
