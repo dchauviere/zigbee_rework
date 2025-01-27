@@ -63,3 +63,14 @@
 #define IS_BOOT_LOADER_IMAGE				0
 #define RESV_FOR_APP_RAM_CODE_SIZE			0
 #define IMAGE_OFFSET						APP_IMAGE_ADDR
+
+#ifndef ZCL_BASIC_MFG_NAME
+#define ZCL_BASIC_MFG_NAME     {6,'D','C','E','D','e','v'}
+#endif
+#ifndef ZCL_BASIC_MODEL_ID
+#define ZCL_BASIC_MODEL_ID	   {14,'Z','S','-','E','U','B','2','_','T','S','0','0','1','2'}
+#endif
+
+#ifndef ZCL_BASIC_SW_BUILD_ID //max 16 chars
+	#define ZCL_BASIC_SW_BUILD_ID       {8,'v',(APP_RELEASE >> 4) + 0x30,'.',APP_BUILD + 0x30,'s',(STACK_RELEASE >> 4) + 0x30,'.',STACK_BUILD + 0x30}
+#endif

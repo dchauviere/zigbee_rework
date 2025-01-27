@@ -45,7 +45,6 @@ typedef struct{
 	ev_timer_event_t *bdbFBTimerEvt;
 	ev_timer_event_t *timerLedEvt;
     s32 Vbat;		//current voltage
-	u32 keyPressedTime;
 
 	u16 ledOnTime;
 	u16 ledOffTime;
@@ -56,6 +55,14 @@ typedef struct{
 
 	u8  keyPressed;
 	bool switchAttrsChanged;
+
+	u32 keyPressedTime;
+	u32 actionTime;
+	u8 keyCode;
+	u8 nbClicks;
+	bool longClick;
+	ev_timer_event_t *timerAction;
+	ev_timer_event_t *timerLongPress;
 
 	app_linkKey_info_t tcLinkKey;
 }app_ctx_t;
@@ -72,6 +79,8 @@ typedef struct{
 	u8	modelId[ZCL_BASIC_MAX_LENGTH];
 	u8	swBuildId[ZCL_BASIC_MAX_LENGTH];
 	u8	powerSource;
+	u8  genDevClass;                        //attr 8
+	u8  genDevType;                         //attr 9
 	u8	deviceEnable;
 }zcl_basicAttr_t;
 

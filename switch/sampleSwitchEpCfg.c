@@ -31,19 +31,14 @@
 #include "tl_common.h"
 #include "zcl_include.h"
 #include "sampleSwitch.h"
+#include "version_cfg.h"
 
 /**********************************************************************
  * LOCAL CONSTANTS
  */
-#ifndef ZCL_BASIC_MFG_NAME
-#define ZCL_BASIC_MFG_NAME     {6,'D','o','c','L','a','b'}
-#endif
-#ifndef ZCL_BASIC_MODEL_ID
-#define ZCL_BASIC_MODEL_ID	   {20,'F','i','x','e','d','_','Z','S','-','E','U','B','2','_','T','S','0','0','1','2'}
-#endif
-#ifndef ZCL_BASIC_SW_BUILD_ID
-#define ZCL_BASIC_SW_BUILD_ID  {10,'0','1','2','5','0','1','2','0','2','5'}
-#endif
+
+#define ZCL_ATTRID_BASIC_GENERIC_DEVICE_CLASS  0x0008
+#define ZCL_ATTRID_BASIC_GENERIC_DEVICE_TYPE   0x0009
 
 /**********************************************************************
  * TYPEDEFS
@@ -126,12 +121,14 @@ const af_simple_descriptor_t sampleSwitch_simpleDesc =
 zcl_basicAttr_t g_zcl_basicAttrs =
 {
 	.zclVersion 	= 0x03,
-	.appVersion 	= 0x00,
-	.stackVersion 	= 0x02,
-	.hwVersion		= 0x00,
+	.appVersion 	= (APP_RELEASE|APP_BUILD), //0x00,
+	.stackVersion 	= (STACK_RELEASE|STACK_BUILD), //0x02,
+	.hwVersion		= HARDWARE_REV, //0x00,
 	.manuName		= ZCL_BASIC_MFG_NAME,
 	.modelId		= ZCL_BASIC_MODEL_ID,
 	.powerSource	= POWER_SOURCE_MAINS_1_PHASE,
+	.genDevClass    = 0x00,  //Lightning
+	.genDevType     = 0xe1,  //Wall Switch
 	.swBuildId		= ZCL_BASIC_SW_BUILD_ID,
 	.deviceEnable	= TRUE,
 };
@@ -145,6 +142,8 @@ const zclAttrInfo_t basic_attrTbl[] =
 	{ ZCL_ATTRID_BASIC_MFR_NAME,     		ZCL_DATA_TYPE_CHAR_STR, ACCESS_CONTROL_READ,  						(u8*)g_zcl_basicAttrs.manuName},
 	{ ZCL_ATTRID_BASIC_MODEL_ID,     		ZCL_DATA_TYPE_CHAR_STR, ACCESS_CONTROL_READ,  						(u8*)g_zcl_basicAttrs.modelId},
 	{ ZCL_ATTRID_BASIC_POWER_SOURCE, 		ZCL_DATA_TYPE_ENUM8,    ACCESS_CONTROL_READ,  						(u8*)&g_zcl_basicAttrs.powerSource},
+	{ ZCL_ATTRID_BASIC_GENERIC_DEVICE_CLASS,ZCL_DATA_TYPE_ENUM8,    ACCESS_CONTROL_READ,                        (u8*)&g_zcl_basicAttrs.genDevClass},
+	{ ZCL_ATTRID_BASIC_GENERIC_DEVICE_TYPE, ZCL_DATA_TYPE_ENUM8,    ACCESS_CONTROL_READ,                        (u8*)&g_zcl_basicAttrs.genDevType},
 	{ ZCL_ATTRID_BASIC_DEV_ENABLED,  		ZCL_DATA_TYPE_BOOLEAN,  ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, (u8*)&g_zcl_basicAttrs.deviceEnable},
 	{ ZCL_ATTRID_BASIC_SW_BUILD_ID,  		ZCL_DATA_TYPE_CHAR_STR, ACCESS_CONTROL_READ,  						(u8*)&g_zcl_basicAttrs.swBuildId},
 

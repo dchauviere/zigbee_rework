@@ -30,6 +30,8 @@
 extern "C" {
 #endif
 
+#define HARDWARE_REV                0x01
+
 // BUTTON 
 // GPIO_PC4
 #define BUTTON1               		GPIO_PC4
@@ -84,7 +86,7 @@ extern "C" {
 
 // DEBUG
 #if UART_PRINTF_MODE
-	#define	DEBUG_INFO_TX_PIN	    GPIO_PC1//print
+	#define	DEBUG_INFO_TX_PIN	    GPIO_PB1//print
 #endif
 
 #if !defined(__ASSEMBLER__)
