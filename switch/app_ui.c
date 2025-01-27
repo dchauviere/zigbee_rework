@@ -147,7 +147,7 @@ void set_detect_voltage(s32 v){
     g_switchAppCtx.Vbat = v;
 }
 
-void app_sendToggle(void) {
+void app_processToggle(u8 btn) {
 	epInfo_t dstEpInfo;
 	TL_SETSTRUCTCONTENT(dstEpInfo, 0);
 
@@ -162,119 +162,118 @@ void app_sendToggle(void) {
 	zcl_onOff_toggleCmd(SAMPLE_SWITCH_ENDPOINT, &dstEpInfo, FALSE);
 }
 
-void app_sendDblClick(void) {
-	u8 relayState = !drv_gpio_read(RELAY1);
-	drv_gpio_write(RELAY1, relayState);
-	drv_gpio_write(LED1, relayState);
-	if (relayState) {
-		sampleSwitch_onOffUpdate(ZCL_CMD_ONOFF_ON);
-	}else{
-		sampleSwitch_onOffUpdate(ZCL_CMD_ONOFF_OFF);
-	}
+void app_processDblClick(u8 btn) {
+	zcl_onOffAttr_t *onOffAttr = zcl_onoffAttrGet();
+	sampleSwitch_onOffUpdate(ZCL_CMD_ONOFF_TOGGLE);
+
+	drv_gpio_write(RELAY1, onOffAttr.onOff);
+	drv_gpio_write(LED1, onOffAttr.onOff);
 }
 
-void app_sendHold(void) {
+void app_processHold(u8 btn) {
 	static u8 lvl = 1;
 	static bool dir = 1;
 
-	epInfo_t dstEpInfo;
-	TL_SETSTRUCTCONTENT(dstEpInfo, 0);
+	if(zb_isDeviceJoinedNwk()){
+		epInfo_t dstEpInfo;
+		TL_SETSTRUCTCONTENT(dstEpInfo, 0);
 
-	dstEpInfo.profileId = HA_PROFILE_ID;
+		dstEpInfo.profileId = HA_PROFILE_ID;
 #if FIND_AND_BIND_SUPPORT
-	dstEpInfo.dstAddrMode = APS_DSTADDR_EP_NOTPRESETNT;
+		dstEpInfo.dstAddrMode = APS_DSTADDR_EP_NOTPRESETNT;
 #else
-	dstEpInfo.dstAddrMode = APS_SHORT_DSTADDR_WITHEP;
-	dstEpInfo.dstEp = SAMPLE_SWITCH_ENDPOINT;
-	dstEpInfo.dstAddr.shortAddr = 0xfffc;
+		dstEpInfo.dstAddrMode = APS_SHORT_DSTADDR_WITHEP;
+		dstEpInfo.dstEp = SAMPLE_SWITCH_ENDPOINT;
+		dstEpInfo.dstAddr.shortAddr = 0xfffc;
 #endif
 
-	moveToLvl_t move2Level;
+		moveToLvl_t move2Level;
 
-	move2Level.optPresent = 0;
-	move2Level.transitionTime = 0x0A;
-	move2Level.level = lvl;
+		move2Level.optPresent = 0;
+		move2Level.transitionTime = 0x0A;
+		move2Level.level = lvl;
 
-	zcl_level_move2levelCmd(SAMPLE_SWITCH_ENDPOINT, &dstEpInfo, FALSE, &move2Level);
+		zcl_level_move2levelCmd(SAMPLE_SWITCH_ENDPOINT, &dstEpInfo, FALSE, &move2Level);
 
-	if(dir){
-		lvl += 50;
-		if(lvl >= 250){
-			dir = 0;
+		if(dir){
+			lvl += 50;
+			if(lvl >= 250){
+				dir = 0;
+			}
+		}else{
+			lvl -= 50;
+			if(lvl <= 1){
+				dir = 1;
+			}
 		}
-	}else{
-		lvl -= 50;
-		if(lvl <= 1){
-			dir = 1;
-		}
-	}
-}
-
-s32 app_action(void) {
-	if(zb_isDeviceJoinedNwk()){
-		if (g_switchAppCtx.keyCode == VK_SW1 && g_switchAppCtx.nbClicks == 5 && g_switchAppCtx.longClick == true) {
-    	  	// Factory Reset
-			printf("factory reset\n");
-			zb_factoryReset();
-    	}
-    	if (g_switchAppCtx.nbClicks == 1) {
-    	  	if (g_switchAppCtx.longClick == false) {
-    	    	// Send Toggle
-				app_sendToggle();
-				printf("send click\n");
-    	  	} else {
-    	    	// Send Hold
-			  printf("send hold\n");
-				app_sendHold();
-    	  	}
-    	}
-    	if (g_switchAppCtx.nbClicks == 2 && g_switchAppCtx.longClick == false) {
-    	  // Send double click
-		  printf("send double click\n");
-		  app_sendDblClick();
-    	}
 	} else {
 		zb_rejoinReq(zb_apsChannelMaskGet(), g_bdbAttrs.scanDuration);
 	}
-	g_switchAppCtx.state = APP_STATE_IDLE;
-  	g_switchAppCtx.longClick = false;
-  	g_switchAppCtx.nbClicks = 0;
+}
+
+void app_processClicks(u8 btn, u8 nbClicks) {
+	if(zb_isDeviceJoinedNwk()){
+    	if (nbClicks == 1) {
+    	    // Send Toggle
+			printf("send toggle\n");
+			app_processToggle(btn);
+    	} else if (nbClicks == 2) {
+    	  // Send double click
+		  printf("send double click\n");
+		  app_processDblClick(btn);
+    	} else if (btn == VK_SW1 && nbClicks == 5) {
+    	  	// Factory Reset
+			printf("factory reset\n");
+			zb_factoryReset();
+    	} else {
+			printf("action with %d clicks not implemented", nbClicks);
+		}
+	} else {
+		printf("try to rejoin network");
+		zb_rejoinReq(zb_apsChannelMaskGet(), g_bdbAttrs.scanDuration);
+	}
 }
 
 void app_key_handler(void){
 	static u8 valid_keyCode = 0xff;
-	if (g_switchAppCtx.keyPressed == 0 && g_switchAppCtx.state == APP_STATE_ACTION){
+	static u8 nbClicks = 0x00;
+	static u8 keyPressed = 0x00;
+
+	if (keyPressed == 0 && g_switchAppCtx.state == APP_STATE_ACTION_CLICKS){
 		if (clock_time_exceed(g_switchAppCtx.actionTime, 500*1000)){
-			app_action();
+			printf("Action clicks nbClicks=%d\n", nbClicks);
+			app_processClicks(valid_keyCode, nbClicks);
+			g_switchAppCtx.state = APP_STATE_IDLE;
+  			nbClicks = 0;
 		}
 	}
-	if (g_switchAppCtx.keyPressed == 1 && clock_time_exceed(g_switchAppCtx.keyPressedTime, 2*1000*1000)) {
-		g_switchAppCtx.longClick = true;
+	if (keyPressed == 1 && clock_time_exceed(g_switchAppCtx.keyPressedTime, 2*1000*1000)) {
+		g_switchAppCtx.state = APP_STATE_ACTION_HOLD;
+		app_processHold(valid_keyCode);
+		g_switchAppCtx.keyPressedTime = clock_time();
 	}
 	if(kb_scan_key(0, 1)){
 		if(kb_event.cnt){
 			// Key Pressed
 			printf("key pressed\n");
-			g_switchAppCtx.keyPressed = 1;
-			g_switchAppCtx.state = APP_STATE_WAIT_RELEASE;
-			// Stop action timer
-			g_switchAppCtx.nbClicks++;
-			// start long press timer
-			g_switchAppCtx.keyCode = kb_event.keycode[0];
-			g_switchAppCtx.longClick = false;
+			keyPressed = 1;
+			g_switchAppCtx.state = APP_STATE_WAIT_KEY_MODE;
 			g_switchAppCtx.keyPressedTime = clock_time();
 			if(kb_event.cnt == 1){
 				valid_keyCode = kb_event.keycode[0];
 			}
 		}else{
 			// Key Released
-			printf("key released longClick=%x nbClicks=%d\n", g_switchAppCtx.longClick, g_switchAppCtx.nbClicks);
-			g_switchAppCtx.keyCode = 0xff;
-			// start action timer
-			g_switchAppCtx.state = APP_STATE_ACTION;
-			g_switchAppCtx.actionTime = clock_time();
-			valid_keyCode = 0xff;
-			g_switchAppCtx.keyPressed = 0;
+			printf("key released\n");
+			keyPressed = 0;
+			if (g_switchAppCtx.state == APP_STATE_WAIT_KEY_MODE) { 
+				nbClicks++;
+				g_switchAppCtx.actionTime = clock_time();
+				g_switchAppCtx.state = APP_STATE_ACTION_CLICKS;
+			} else {
+				valid_keyCode = 0xff;
+				g_switchAppCtx.state = APP_STATE_IDLE;
+			}
 		}
 	}
 }

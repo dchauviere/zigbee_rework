@@ -53,16 +53,10 @@ typedef struct{
 	u8 	times;		//blink times
 	u8  state;
 
-	u8  keyPressed;
 	bool switchAttrsChanged;
 
 	u32 keyPressedTime;
 	u32 actionTime;
-	u8 keyCode;
-	u8 nbClicks;
-	bool longClick;
-	ev_timer_event_t *timerAction;
-	ev_timer_event_t *timerLongPress;
 
 	app_linkKey_info_t tcLinkKey;
 }app_ctx_t;
@@ -159,7 +153,7 @@ extern zcl_basicAttr_t g_zcl_basicAttrs;
 extern zcl_identifyAttr_t g_zcl_identifyAttrs;
 extern zcl_groupAttr_t g_zcl_groupAttrs;
 extern zcl_sceneAttr_t g_zcl_sceneAttrs;
-extern zcl_onOffAttr_t g_zcl_onOffAttrs;
+extern zcl_onOffAttr_t g_zcl_onOffAttrs; // for relay1
 extern zcl_pollCtrlAttr_t g_zcl_pollCtrlAttrs;
 
 #define zcl_sceneAttrGet()		&g_zcl_sceneAttrs
