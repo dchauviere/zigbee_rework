@@ -29,6 +29,7 @@ SET(ZIGBEE_SRC
     ${SDK_PREFIX}/platform/tc32/div_mod.S
     ${SDK_PREFIX}/platform/chip_${TELINK_PLATFORM}/flash.c
     ${SDK_PREFIX}/platform/chip_${TELINK_PLATFORM}/adc.c
+    ${SDK_PREFIX}/platform/chip_${TELINK_PLATFORM}/flash/flash_common.c
     ${SDK_PREFIX}/platform/chip_${TELINK_PLATFORM}/flash/flash_mid13325e.c
     ${SDK_PREFIX}/platform/chip_${TELINK_PLATFORM}/flash/flash_mid011460c8.c
     ${SDK_PREFIX}/platform/chip_${TELINK_PLATFORM}/flash/flash_mid1060c8.c
@@ -216,7 +217,7 @@ TARGET_LINK_LIBRARIES(${TARGET}
 	drivers_${TELINK_PLATFORM}
 	timestamp
 
-        -Wl,--end-group
+    -Wl,--end-group
 )
 
 ADD_BIN_TARGET(${TARGET} ${PROJECT_SOURCE_DIR}/tools)

@@ -212,22 +212,27 @@ const zclAttrInfo_t scene_attrTbl[] =
 
 #ifdef ZCL_ON_OFF
 /* On/Off */
-zcl_onOffAttr_t g_zcl_onOffAttrs =
+zcl_onOffAttr_t g_zcl_onOffAttrs[2] =
 {
-	.onOff				= 0x00,
-	.globalSceneControl	= 1,
-	.onTime				= 0x0000,
-	.offWaitTime		= 0x0000,
-	.startUpOnOff 		= ZCL_START_UP_ONOFF_SET_ONOFF_TO_ON,
+	[0].onOff				= 0x00,
+	[0].globalSceneControl	= 1,
+	[0].onTime				= 0x0000,
+	[0].offWaitTime		= 0x0000,
+	[0].startUpOnOff 		= ZCL_START_UP_ONOFF_SET_ONOFF_TO_ON,
+	[1].onOff				= 0x00,
+	[1].globalSceneControl	= 1,
+	[1].onTime				= 0x0000,
+	[1].offWaitTime		= 0x0000,
+	[1].startUpOnOff 		= ZCL_START_UP_ONOFF_SET_ONOFF_TO_ON,
 };
 
 const zclAttrInfo_t onOff_attrTbl[] =
 {
-	{ ZCL_ATTRID_ONOFF,  					ZCL_DATA_TYPE_BOOLEAN,  ACCESS_CONTROL_READ | ACCESS_CONTROL_REPORTABLE,  (u8*)&g_zcl_onOffAttrs.onOff},
-	{ ZCL_ATTRID_GLOBAL_SCENE_CONTROL, 		ZCL_DATA_TYPE_BOOLEAN, 	ACCESS_CONTROL_READ, 							  (u8*)&g_zcl_onOffAttrs.globalSceneControl},
-	{ ZCL_ATTRID_ON_TIME, 					ZCL_DATA_TYPE_UINT16, 	ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, 	  (u8*)&g_zcl_onOffAttrs.onTime},
-	{ ZCL_ATTRID_OFF_WAIT_TIME, 			ZCL_DATA_TYPE_UINT16, 	ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, 	  (u8*)&g_zcl_onOffAttrs.offWaitTime},
-	{ ZCL_ATTRID_START_UP_ONOFF, 			ZCL_DATA_TYPE_ENUM8, 	ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, 	  (u8*)&g_zcl_onOffAttrs.startUpOnOff},
+	{ ZCL_ATTRID_ONOFF,  					ZCL_DATA_TYPE_BOOLEAN,  ACCESS_CONTROL_READ | ACCESS_CONTROL_REPORTABLE,  (u8*)&g_zcl_onOffAttrs[0].onOff},
+	{ ZCL_ATTRID_GLOBAL_SCENE_CONTROL, 		ZCL_DATA_TYPE_BOOLEAN, 	ACCESS_CONTROL_READ, 							  (u8*)&g_zcl_onOffAttrs[0].globalSceneControl},
+	{ ZCL_ATTRID_ON_TIME, 					ZCL_DATA_TYPE_UINT16, 	ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, 	  (u8*)&g_zcl_onOffAttrs[0].onTime},
+	{ ZCL_ATTRID_OFF_WAIT_TIME, 			ZCL_DATA_TYPE_UINT16, 	ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, 	  (u8*)&g_zcl_onOffAttrs[0].offWaitTime},
+	{ ZCL_ATTRID_START_UP_ONOFF, 			ZCL_DATA_TYPE_ENUM8, 	ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, 	  (u8*)&g_zcl_onOffAttrs[0].startUpOnOff},
 
 	{ ZCL_ATTRID_GLOBAL_CLUSTER_REVISION, 	ZCL_DATA_TYPE_UINT16,  	ACCESS_CONTROL_READ,  							  (u8*)&zcl_attr_global_clusterRevision},
 };
@@ -306,22 +311,27 @@ nv_sts_t zcl_onOffAttr_save(void)
 
 #ifdef ZCL_ON_OFF
 #if NV_ENABLE
-	zcl_nv_onOff_t zcl_nv_onOff;
+	zcl_nv_onOff_t zcl_nv_onOff[2];
 
-	st = nv_flashReadNew(1, NV_MODULE_ZCL,  NV_ITEM_ZCL_ON_OFF, sizeof(zcl_nv_onOff_t), (u8*)&zcl_nv_onOff);
+	st = nv_flashReadNew(1, NV_MODULE_ZCL,  NV_ITEM_ZCL_ON_OFF, sizeof(zcl_nv_onOff_t)*2, (u8*)&zcl_nv_onOff);
 
 	if(st == NV_SUCC){
-		if((zcl_nv_onOff.onOff != g_zcl_onOffAttrs.onOff) || (zcl_nv_onOff.startUpOnOff != g_zcl_onOffAttrs.startUpOnOff)){
-			zcl_nv_onOff.onOff = g_zcl_onOffAttrs.onOff;
-			zcl_nv_onOff.startUpOnOff = g_zcl_onOffAttrs.startUpOnOff;
+		if((zcl_nv_onOff[0].onOff != g_zcl_onOffAttrs[0].onOff) || (zcl_nv_onOff[0].startUpOnOff != g_zcl_onOffAttrs[0].startUpOnOff) ||
+		   (zcl_nv_onOff[1].onOff != g_zcl_onOffAttrs[1].onOff) || (zcl_nv_onOff[1].startUpOnOff != g_zcl_onOffAttrs[1].startUpOnOff)){
+			zcl_nv_onOff[0].onOff = g_zcl_onOffAttrs[0].onOff;
+			zcl_nv_onOff[0].startUpOnOff = g_zcl_onOffAttrs[0].startUpOnOff;
+			zcl_nv_onOff[1].onOff = g_zcl_onOffAttrs[1].onOff;
+			zcl_nv_onOff[1].startUpOnOff = g_zcl_onOffAttrs[1].startUpOnOff;
 
-			st = nv_flashWriteNew(1, NV_MODULE_ZCL, NV_ITEM_ZCL_ON_OFF, sizeof(zcl_nv_onOff_t), (u8*)&zcl_nv_onOff);
+			st = nv_flashWriteNew(1, NV_MODULE_ZCL, NV_ITEM_ZCL_ON_OFF, sizeof(zcl_nv_onOff_t)*2, (u8*)&zcl_nv_onOff);
 		}
 	}else if(st == NV_ITEM_NOT_FOUND){
-		zcl_nv_onOff.onOff = g_zcl_onOffAttrs.onOff;
-		zcl_nv_onOff.startUpOnOff = g_zcl_onOffAttrs.startUpOnOff;
+		zcl_nv_onOff[0].onOff = g_zcl_onOffAttrs[0].onOff;
+		zcl_nv_onOff[0].startUpOnOff = g_zcl_onOffAttrs[0].startUpOnOff;
+		zcl_nv_onOff[1].onOff = g_zcl_onOffAttrs[1].onOff;
+		zcl_nv_onOff[1].startUpOnOff = g_zcl_onOffAttrs[1].startUpOnOff;
 
-		st = nv_flashWriteNew(1, NV_MODULE_ZCL, NV_ITEM_ZCL_ON_OFF, sizeof(zcl_nv_onOff_t), (u8*)&zcl_nv_onOff);
+		st = nv_flashWriteNew(1, NV_MODULE_ZCL, NV_ITEM_ZCL_ON_OFF, sizeof(zcl_nv_onOff_t)*2, (u8*)&zcl_nv_onOff);
 	}
 #else
 	st = NV_ENABLE_PROTECT_ERROR;
@@ -346,13 +356,15 @@ nv_sts_t zcl_onOffAttr_restore(void)
 
 #ifdef ZCL_ON_OFF
 #if NV_ENABLE
-	zcl_nv_onOff_t zcl_nv_onOff;
+	zcl_nv_onOff_t zcl_nv_onOff[2];
 
-	st = nv_flashReadNew(1, NV_MODULE_ZCL,  NV_ITEM_ZCL_ON_OFF, sizeof(zcl_nv_onOff_t), (u8*)&zcl_nv_onOff);
+	st = nv_flashReadNew(1, NV_MODULE_ZCL,  NV_ITEM_ZCL_ON_OFF, sizeof(zcl_nv_onOff_t)*2, (u8*)&zcl_nv_onOff);
 
 	if(st == NV_SUCC){
-		g_zcl_onOffAttrs.onOff = zcl_nv_onOff.onOff;
-		g_zcl_onOffAttrs.startUpOnOff = zcl_nv_onOff.startUpOnOff;
+		g_zcl_onOffAttrs[0].onOff = zcl_nv_onOff[0].onOff;
+		g_zcl_onOffAttrs[0].startUpOnOff = zcl_nv_onOff[0].startUpOnOff;
+		g_zcl_onOffAttrs[1].onOff = zcl_nv_onOff[1].onOff;
+		g_zcl_onOffAttrs[1].startUpOnOff = zcl_nv_onOff[1].startUpOnOff;
 	}
 #else
 	st = NV_ENABLE_PROTECT_ERROR;

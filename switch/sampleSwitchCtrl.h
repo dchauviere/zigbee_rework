@@ -15,7 +15,7 @@ typedef enum
  */
 void switch_init(void);
 void switch_adjust(void);
-void switch_refresh(switchSta_e);
+void switch_refresh(u8 btn, switchSta_e);
 
 /*
 void light_blink_start(u8 times, u16 ledOnTime, u16 ledOffTime);

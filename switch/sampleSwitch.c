@@ -55,7 +55,6 @@
  */
 app_ctx_t g_switchAppCtx;
 
-
 #ifdef ZCL_OTA
 extern ota_callBack_t sampleSwitch_otaCb;
 
@@ -187,12 +186,14 @@ void user_app_init(void)
 
 	/* register endPoint */
 	af_endpointRegister(SAMPLE_SWITCH_ENDPOINT, (af_simple_descriptor_t *)&sampleSwitch_simpleDesc, zcl_rx_handler, NULL);
+	af_endpointRegister(SAMPLE_SWITCH_ENDPOINT_2, (af_simple_descriptor_t *)&sampleSwitch_simpleDesc2, zcl_rx_handler, NULL);
 
 	zcl_sampleSwitchAttrsInit();
 	zcl_reportingTabInit();
 
 	/* Register ZCL specific cluster information */
 	zcl_register(SAMPLE_SWITCH_ENDPOINT, SAMPLE_SWITCH_CB_CLUSTER_NUM, (zcl_specClusterInfo_t *)g_sampleSwitchClusterList);
+	zcl_register(SAMPLE_SWITCH_ENDPOINT_2, SAMPLE_SWITCH_CB_CLUSTER_NUM_2, (zcl_specClusterInfo_t *)g_sampleSwitchClusterList2);
 
 #if ZCL_OTA_SUPPORT
     ota_init(OTA_TYPE_CLIENT, (af_simple_descriptor_t *)&sampleSwitch_simpleDesc, &sampleSwitch_otaInfo, &sampleSwitch_otaCb);

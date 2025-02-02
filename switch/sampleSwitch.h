@@ -31,6 +31,7 @@
  * CONSTANT
  */
 #define SAMPLE_SWITCH_ENDPOINT  0x01
+#define SAMPLE_SWITCH_ENDPOINT_2  0x02
 
 /**********************************************************************
  * TYPEDEFS
@@ -145,19 +146,22 @@ extern bdb_appCb_t g_zbDemoBdbCb;
 extern bdb_commissionSetting_t g_bdbCommissionSetting;
 
 extern u8 SAMPLE_SWITCH_CB_CLUSTER_NUM;
+extern u8 SAMPLE_SWITCH_CB_CLUSTER_NUM_2;
 extern const zcl_specClusterInfo_t g_sampleSwitchClusterList[];
+extern const zcl_specClusterInfo_t g_sampleSwitchClusterList2[];
 extern const af_simple_descriptor_t sampleSwitch_simpleDesc;
+extern const af_simple_descriptor_t sampleSwitch_simpleDesc2;
 
 /* Attributes */
 extern zcl_basicAttr_t g_zcl_basicAttrs;
 extern zcl_identifyAttr_t g_zcl_identifyAttrs;
 extern zcl_groupAttr_t g_zcl_groupAttrs;
 extern zcl_sceneAttr_t g_zcl_sceneAttrs;
-extern zcl_onOffAttr_t g_zcl_onOffAttrs; // for relay1
+extern zcl_onOffAttr_t g_zcl_onOffAttrs[2]; // for relays
 extern zcl_pollCtrlAttr_t g_zcl_pollCtrlAttrs;
 
 #define zcl_sceneAttrGet()		&g_zcl_sceneAttrs
-#define zcl_onoffAttrGet()		&g_zcl_onOffAttrs
+#define zcl_onoffAttrGet(x)		&g_zcl_onOffAttrs[x]
 #define zcl_pollCtrlAttrGet()	&g_zcl_pollCtrlAttrs
 /**********************************************************************
  * FUNCTIONS
@@ -172,7 +176,7 @@ status_t sampleSwitch_onOffCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *
 status_t sampleSwitch_pollCtrlCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPayload);
 
 void sampleSwitch_onoff(u8 cmd);
-void sampleSwitch_onOffUpdate(u8 cmd);
+void sampleSwitch_onOffUpdate(u8 btn, u8 cmd);
 
 void sampleSwitch_leaveCnfHandler(nlme_leave_cnf_t *pLeaveCnf);
 void sampleSwitch_leaveIndHandler(nlme_leave_ind_t *pLeaveInd);

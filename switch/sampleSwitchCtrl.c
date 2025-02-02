@@ -10,6 +10,9 @@
 
 extern void sampleSwitch_onOffInit(void);
 
+const u16 RELAYS[2] = {RELAY1, RELAY2};
+const u16 LEDS[2] = {LED1, LED2};
+
 /*********************************************************************
  * @fn      switch_init
  *
@@ -47,12 +50,14 @@ void switch_adjust(void)
  *
  * @return  None
  */
-static void hwSwitch_onOffUpdate(bool onOff)
+static void hwSwitch_onOffUpdate(u8 btn, bool onOff)
 {
 	if(onOff){
-		drv_gpio_write(RELAY1, 1);
+		drv_gpio_write(RELAYS[btn-1], 1);
+		drv_gpio_write(LEDS[btn-1], 1);
 	}else{
-		drv_gpio_write(RELAY1, 0);
+		drv_gpio_write(RELAYS[btn-1], 0);
+		drv_gpio_write(LEDS[btn-1], 0);
 	}
 }
 
@@ -65,10 +70,10 @@ static void hwSwitch_onOffUpdate(bool onOff)
  *
  * @return  None
  */
-static void switch_onOffUpdate(void)
+static void switch_onOffUpdate(u8 btn)
 {
-	zcl_onOffAttr_t *pOnOff = zcl_onoffAttrGet();
-	hwSwitch_onOffUpdate(pOnOff->onOff);
+	zcl_onOffAttr_t *pOnOff = zcl_onoffAttrGet(btn-1);
+	hwSwitch_onOffUpdate(btn, pOnOff->onOff);
 }
 
 /*********************************************************************
@@ -80,12 +85,12 @@ static void switch_onOffUpdate(void)
  *
  * @return  None
  */
-void switch_refresh(switchSta_e sta)
+void switch_refresh(u8 btn, switchSta_e sta)
 {
 	switch(sta){
 #if ZCL_ON_OFF_SUPPORT
 		case SWITCH_STA_ON_OFF:
-			switch_onOffUpdate();
+			switch_onOffUpdate(btn);
 			break;
 #endif
 		default:

@@ -33,12 +33,12 @@
 #include "zcl_include.h"
 #include "bdb.h"
 #include "sampleSwitch.h"
+#include "sampleSwitchCtrl.h"
 #include "app_ui.h"
 
 /**********************************************************************
  * LOCAL CONSTANTS
  */
-
 
 /**********************************************************************
  * TYPEDEFS
@@ -156,18 +156,17 @@ void app_processToggle(u8 btn) {
 	dstEpInfo.dstAddrMode = APS_DSTADDR_EP_NOTPRESETNT;
 #else
 	dstEpInfo.dstAddrMode = APS_SHORT_DSTADDR_WITHEP;
-	dstEpInfo.dstEp = SAMPLE_SWITCH_ENDPOINT;
+	dstEpInfo.dstEp = btn;
 	dstEpInfo.dstAddr.shortAddr = 0xfffc;
 #endif
-	zcl_onOff_toggleCmd(SAMPLE_SWITCH_ENDPOINT, &dstEpInfo, FALSE);
+	zcl_onOff_toggleCmd(btn, &dstEpInfo, FALSE);
 }
 
 void app_processDblClick(u8 btn) {
-	zcl_onOffAttr_t *onOffAttr = zcl_onoffAttrGet();
-	sampleSwitch_onOffUpdate(ZCL_CMD_ONOFF_TOGGLE);
+	zcl_onOffAttr_t *onOffAttr = zcl_onoffAttrGet(btn-1);
+	sampleSwitch_onOffUpdate(btn, ZCL_CMD_ONOFF_TOGGLE);
 
-	drv_gpio_write(RELAY1, onOffAttr.onOff);
-	drv_gpio_write(LED1, onOffAttr.onOff);
+	switch_adjust();
 }
 
 void app_processHold(u8 btn) {
@@ -183,7 +182,7 @@ void app_processHold(u8 btn) {
 		dstEpInfo.dstAddrMode = APS_DSTADDR_EP_NOTPRESETNT;
 #else
 		dstEpInfo.dstAddrMode = APS_SHORT_DSTADDR_WITHEP;
-		dstEpInfo.dstEp = SAMPLE_SWITCH_ENDPOINT;
+		dstEpInfo.dstEp = btn;
 		dstEpInfo.dstAddr.shortAddr = 0xfffc;
 #endif
 
@@ -193,7 +192,7 @@ void app_processHold(u8 btn) {
 		move2Level.transitionTime = 0x0A;
 		move2Level.level = lvl;
 
-		zcl_level_move2levelCmd(SAMPLE_SWITCH_ENDPOINT, &dstEpInfo, FALSE, &move2Level);
+		zcl_level_move2levelCmd(btn, &dstEpInfo, FALSE, &move2Level);
 
 		if(dir){
 			lvl += 50;
