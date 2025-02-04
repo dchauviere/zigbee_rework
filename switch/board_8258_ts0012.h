@@ -61,17 +61,18 @@ extern "C" {
 #define PD7_INPUT_ENABLE			0
 
 // LED
+// GPIO_C0
+#define LED1     					GPIO_PC0
+#define PC0_FUNC					AS_GPIO
+#define PC0_OUTPUT_ENABLE			1
+#define PC0_INPUT_ENABLE			0
+
 // GPIO_D3
-#define LED1     					GPIO_PD3
+#define LED2     					GPIO_PD3
 #define PD3_FUNC					AS_GPIO
 #define PD3_OUTPUT_ENABLE			1
 #define PD3_INPUT_ENABLE			0
 
-// GPIO_C0
-#define LED2     					GPIO_PC0
-#define PC0_FUNC					AS_GPIO
-#define PC0_OUTPUT_ENABLE			1
-#define PC0_INPUT_ENABLE			0
 
 #define LED_POWER					LED1
 

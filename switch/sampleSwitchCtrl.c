@@ -25,6 +25,9 @@ const u16 LEDS[2] = {LED1, LED2};
 void switch_init(void)
 {
 	drv_gpio_write(RELAY1, 0);
+	drv_gpio_write(RELAY2, 0);
+	drv_gpio_write(LED1, 0);
+	drv_gpio_write(LED2, 0);
 }
 
 /*********************************************************************

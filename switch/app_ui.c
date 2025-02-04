@@ -160,13 +160,12 @@ void app_processToggle(u8 btn) {
 	dstEpInfo.dstAddr.shortAddr = 0xfffc;
 #endif
 	zcl_onOff_toggleCmd(btn, &dstEpInfo, FALSE);
+	sampleSwitch_onOffUpdate(btn, ZCL_CMD_ONOFF_TOGGLE);
 }
 
 void app_processDblClick(u8 btn) {
 	zcl_onOffAttr_t *onOffAttr = zcl_onoffAttrGet(btn-1);
 	sampleSwitch_onOffUpdate(btn, ZCL_CMD_ONOFF_TOGGLE);
-
-	switch_adjust();
 }
 
 void app_processHold(u8 btn) {
@@ -195,12 +194,12 @@ void app_processHold(u8 btn) {
 		zcl_level_move2levelCmd(btn, &dstEpInfo, FALSE, &move2Level);
 
 		if(dir){
-			lvl += 50;
+			lvl += APP_DEFAULT_ACTION_HOLD_STEP;
 			if(lvl >= 250){
 				dir = 0;
 			}
 		}else{
-			lvl -= 50;
+			lvl -= APP_DEFAULT_ACTION_HOLD_STEP;
 			if(lvl <= 1){
 				dir = 1;
 			}
@@ -238,19 +237,20 @@ void app_key_handler(void){
 	static u8 nbClicks = 0x00;
 	static u8 keyPressed = 0x00;
 
-	if (keyPressed == 0 && g_switchAppCtx.state == APP_STATE_ACTION_CLICKS){
-		if (clock_time_exceed(g_switchAppCtx.actionTime, 500*1000)){
-			printf("Action clicks nbClicks=%d\n", nbClicks);
-			app_processClicks(valid_keyCode, nbClicks);
-			g_switchAppCtx.state = APP_STATE_IDLE;
-  			nbClicks = 0;
-		}
-	}
-	if (keyPressed == 1 && clock_time_exceed(g_switchAppCtx.keyPressedTime, 2*1000*1000)) {
+	if (g_switchAppCtx.state == APP_STATE_ACTION_CLICKS && clock_time_exceed(g_switchAppCtx.actionTime, 500*1000)){
+		printf("Action clicks nbClicks=%d\n", nbClicks);
+		app_processClicks(valid_keyCode, nbClicks);
+		g_switchAppCtx.state = APP_STATE_IDLE;
+  		nbClicks = 0;
+	} else if (g_switchAppCtx.state == APP_STATE_WAIT_KEY_MODE && clock_time_exceed(g_switchAppCtx.keyPressedTime, APP_DEFAULT_ACTION_HOLD_THRESHOLD)) {
 		g_switchAppCtx.state = APP_STATE_ACTION_HOLD;
 		app_processHold(valid_keyCode);
 		g_switchAppCtx.keyPressedTime = clock_time();
+	} else if (g_switchAppCtx.state == APP_STATE_ACTION_HOLD && clock_time_exceed(g_switchAppCtx.keyPressedTime, APP_DEFAULT_ACTION_HOLD_TRANSITION)) {
+		app_processHold(valid_keyCode);
+		g_switchAppCtx.keyPressedTime = clock_time();
 	}
+
 	if(kb_scan_key(0, 1)){
 		if(kb_event.cnt){
 			// Key Pressed

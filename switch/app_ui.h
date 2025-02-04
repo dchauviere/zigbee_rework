@@ -35,6 +35,9 @@
 #define RELAY_ON						1
 #define RELAY_OFF						0
 
+#define APP_DEFAULT_ACTION_HOLD_THRESHOLD  2*1000*1000
+#define APP_DEFAULT_ACTION_HOLD_TRANSITION 2*500*1000
+#define APP_DEFAULT_ACTION_HOLD_STEP       50
 
 /**********************************************************************
  * TYPEDEFS
