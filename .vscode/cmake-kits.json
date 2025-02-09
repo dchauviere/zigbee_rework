@@ -1,0 +1,7 @@
+[
+    {
+      "name": "Telink",
+      "toolchainFile": "${workspaceFolder}/lib/cmake/Toolchain.cmake",
+      "isTrusted": true
+    }
+]

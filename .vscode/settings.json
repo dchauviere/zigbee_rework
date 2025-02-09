@@ -1,0 +1,26 @@
+{
+    "cmake.buildDirectory": "${workspaceFolder}/.build",
+    "cmake.preferredGenerators": [
+        "Unix Makefiles"
+    ],
+    "cmake.configureSettings": {
+        "TOOLCHAIN_PATH": "${workspaceFolder}/.toolchain",
+        "CMAKE_C_STANDARD_LIBRARIES": "",
+        "CMAKE_CXX_STANDARD_LIBRARIES": "",
+        "CMAKE_C_COMPILER_FORCED": 1,
+        "CMAKE_CXX_COMPILER_FORCED": 1,
+        "__PROJECT_TL_SWITCH__": 1
+    },
+    "cmake.environment": {
+        "PATH": "${workspaceFolder}/.toolchain/tc32/bin;$PATH;/usr/bin:/bin"
+    },
+    "cmake.parallelJobs": 24,
+    "cmake.sourceDirectory": "${workspaceFolder}",
+    "cmake.options.statusBarVisibility": "icon",
+    "files.associations": {
+        "zs_eub_2g.h": "c",
+        "tl_common.h": "c",
+        "comm_cfg.h": "c",
+        "sampleswitch.h": "c"
+    }
+}
