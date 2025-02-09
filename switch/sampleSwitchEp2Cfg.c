@@ -72,8 +72,8 @@ const u16 sampleSwitch_outClusterList2[] =
 /**
  *  @brief Definition for Server cluster number and Client cluster number
  */
-#define SAMPLESWITCH_IN_CLUSTER_NUM_2		(sizeof(sampleSwitch_inClusterList2)/sizeof(sampleSwitch_inClusterList2))
-#define SAMPLESWITCH_OUT_CLUSTER_NUM_2	(sizeof(sampleSwitch_outClusterList2)/sizeof(sampleSwitch_outClusterList2))
+#define SAMPLESWITCH_IN_CLUSTER_NUM_2		(sizeof(sampleSwitch_inClusterList2)/sizeof(sampleSwitch_inClusterList2[0]))
+#define SAMPLESWITCH_OUT_CLUSTER_NUM_2	(sizeof(sampleSwitch_outClusterList2)/sizeof(sampleSwitch_outClusterList2[0]))
 
 /**
  *  @brief Definition for simple description for HA profile

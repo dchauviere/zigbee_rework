@@ -44,7 +44,7 @@
 #endif
 
 #define APP_RELEASE							0x10//app release 1.0
-#define APP_BUILD							0x2//app build 01
+#define APP_BUILD							0x8//app build 01
 #define STACK_RELEASE						0x30//stack release 3.0
 #define STACK_BUILD							0x01//stack build 01
 
@@ -71,6 +71,14 @@
 #define ZCL_BASIC_MODEL_ID	   {14,'Z','S','-','E','U','B','2','_','T','S','0','0','1','2'}
 #endif
 
+#ifndef ZCL_BASIC_BUILD_ID
+	#define ZCL_BASIC_BUILD_ID     {10,'0','1','0','5','0','2','2','0','2','5'}
+#endif
+
 #ifndef ZCL_BASIC_SW_BUILD_ID //max 16 chars
-	#define ZCL_BASIC_SW_BUILD_ID       {8,'v',(APP_RELEASE >> 4) + 0x30,'.',APP_BUILD + 0x30,'s',(STACK_RELEASE >> 4) + 0x30,'.',STACK_BUILD + 0x30}
+	#define ZCL_BASIC_SW_BUILD_ID       {7,(APP_RELEASE >> 4) + 0x30,'.',APP_BUILD + 0x30,'.',(STACK_RELEASE >> 4) + 0x30,'.',STACK_BUILD + 0x30}
+#endif
+
+#ifndef ZCL_BASIC_DATE_CODE
+	#define ZCL_BASIC_DATE_CODE  {8,'2','0','2','5','0','2','0','7'}
 #endif

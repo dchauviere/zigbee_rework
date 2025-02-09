@@ -312,6 +312,8 @@ void user_init(bool isRetention)
     	u8 reportableChange = 0x00;
     	bdb_defaultReportingCfg(SAMPLE_SWITCH_ENDPOINT, HA_PROFILE_ID, ZCL_CLUSTER_GEN_ON_OFF, ZCL_ATTRID_ONOFF,
     						0x0000, 0x003c, (u8 *)&reportableChange);
+    	bdb_defaultReportingCfg(SAMPLE_SWITCH_ENDPOINT_2, HA_PROFILE_ID, ZCL_CLUSTER_GEN_ON_OFF, ZCL_ATTRID_ONOFF,
+    						0x0000, 0x003c, (u8 *)&reportableChange);
 
 		/* Initialize BDB */
 		u8 repower = drv_pm_deepSleep_flag_get() ? 0 : 1;
