@@ -32,11 +32,12 @@
 #include "tl_common.h"
 #include "zb_api.h"
 #include "zcl_include.h"
-#include "sampleSwitch.h"
+#include "endpointCfg.h"
+#include "zclApp.h"
 
 
 /*********************************************************************
- * @fn      sampleSwitch_sceneRecallReqHandler
+ * @fn      switch_sceneRecallReqHandler
  *
  * @brief   Handler for ZCL scene recall command. This function will recall scene.
  *
@@ -45,7 +46,7 @@
  *
  * @return  None
  */
-static void sampleSwitch_sceneRecallReqHandler(u8 btn, zclIncomingAddrInfo_t *pAddrInfo, zcl_sceneEntry_t *pScene)
+static void switch_sceneRecallReqHandler(u8 btn, zclIncomingAddrInfo_t *pAddrInfo, zcl_sceneEntry_t *pScene)
 {
 	u8 *pData = pScene->extField;
 	u16 clusterID = 0xFFFF;
@@ -57,22 +58,20 @@ static void sampleSwitch_sceneRecallReqHandler(u8 btn, zclIncomingAddrInfo_t *pA
 
 		extLen = *pData++;//length
 
-#ifdef ZCL_ON_OFF
 		if(clusterID == ZCL_CLUSTER_GEN_ON_OFF){
 			if(extLen >= 1){
 				u8 onOff = *pData++;
 
-				sampleSwitch_onOffCb(pAddrInfo, onOff, NULL);
+				switch_onOffCb(pAddrInfo, onOff, NULL);
 				extLen--;
 			}
 		}
-#endif
 		pData += extLen;
 	}
 }
 
 /*********************************************************************
- * @fn      sampleSwitch_sceneStoreReqHandler
+ * @fn      switch_sceneStoreReqHandler
  *
  * @brief   Handler for ZCL scene store command. This function will set scene attribute first.
  *
@@ -81,24 +80,22 @@ static void sampleSwitch_sceneRecallReqHandler(u8 btn, zclIncomingAddrInfo_t *pA
  *
  * @return  None
  */
-static void sampleSwitch_sceneStoreReqHandler(u8 btn, zcl_sceneEntry_t *pScene)
+static void switch_sceneStoreReqHandler(u8 btn, zcl_sceneEntry_t *pScene)
 {
 	u8 extLen = 0;
 
-#ifdef ZCL_ON_OFF
 	zcl_onOffAttr_t *pOnOff = zcl_onoffAttrGet(btn-1);
 
 	pScene->extField[extLen++] = LO_UINT16(ZCL_CLUSTER_GEN_ON_OFF);
 	pScene->extField[extLen++] = HI_UINT16(ZCL_CLUSTER_GEN_ON_OFF);
 	pScene->extField[extLen++] = sizeof(u8);
 	pScene->extField[extLen++] = pOnOff->onOff;
-#endif
 
 	pScene->extFieldLen = extLen;
 }
 
 /*********************************************************************
- * @fn      sampleSwitch_sceneCb
+ * @fn      switch_sceneCb
  *
  * @brief   Handler for ZCL Scene command.
  *
@@ -106,18 +103,18 @@ static void sampleSwitch_sceneStoreReqHandler(u8 btn, zcl_sceneEntry_t *pScene)
  *
  * @return  None
  */
-status_t sampleSwitch_sceneCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPayload)
+status_t switch_sceneCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPayload)
 {
 	status_t status = ZCL_STA_SUCCESS;
 
-	if(pAddrInfo->dstEp == SAMPLE_SWITCH_ENDPOINT || pAddrInfo->dstEp == SAMPLE_SWITCH_ENDPOINT_2){
+	if(pAddrInfo->dstEp <= BUTTON_NUM){
 		if(pAddrInfo->dirCluster == ZCL_FRAME_CLIENT_SERVER_DIR){
 			switch(cmdId){
 				case ZCL_CMD_SCENE_STORE_SCENE:
-					sampleSwitch_sceneStoreReqHandler(pAddrInfo->dstEp, (zcl_sceneEntry_t *)cmdPayload);
+					switch_sceneStoreReqHandler(pAddrInfo->dstEp, (zcl_sceneEntry_t *)cmdPayload);
 					break;
 				case ZCL_CMD_SCENE_RECALL_SCENE:
-					sampleSwitch_sceneRecallReqHandler(pAddrInfo->dstEp, pAddrInfo, (zcl_sceneEntry_t *)cmdPayload);
+					switch_sceneRecallReqHandler(pAddrInfo->dstEp, pAddrInfo, (zcl_sceneEntry_t *)cmdPayload);
 					break;
 				default:
 					status = ZCL_STA_UNSUP_MANU_CLUSTER_COMMAND;

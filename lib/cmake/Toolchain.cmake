@@ -78,7 +78,7 @@ function(add_tuya_ota_target TARGET TOOLS_PATH CODE TYPE VERSION)
     endif()
     add_custom_target("${TARGET}.tuya.zigbee" ALL
         DEPENDS ${TARGET}.bin
-        COMMAND ${Python3_EXECUTABLE} ${TOOLS_PATH}/make_ota.py -c ${CODE} -t ${TYPE} -v ${VERSION} ${FILENAME}.bin
+        COMMAND ${Python3_EXECUTABLE} ${TOOLS_PATH}/make_ota.py -ot ${FILENAME}.tuya -c ${CODE} -t ${TYPE} -v ${VERSION} ${FILENAME}.bin
     )
 endfunction()
 

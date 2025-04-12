@@ -33,7 +33,10 @@
 #include "zcl_include.h"
 #include "bdb.h"
 #include "ota.h"
-#include "sampleSwitch.h"
+#include "switchApp.h"
+#include "endpointCfg.h"
+#include "zclApp.h"
+#include "zb_appCb.h"
 #include "app_ui.h"
 
 /**********************************************************************
@@ -66,12 +69,10 @@ bdb_appCb_t g_zbDemoBdbCb =
 	zbdemo_bdbFindBindSuccessCb
 };
 
-#ifdef ZCL_OTA
-ota_callBack_t sampleSwitch_otaCb =
+ota_callBack_t switch_otaCb =
 {
-	sampleSwitch_otaProcessMsgHandler,
+	switch_otaProcessMsgHandler,
 };
-#endif
 
 ev_timer_event_t *steerTimerEvt = NULL;
 ev_timer_event_t *switchRejoinBackoffTimerEvt = NULL;
@@ -79,24 +80,22 @@ ev_timer_event_t *switchRejoinBackoffTimerEvt = NULL;
 /**********************************************************************
  * FUNCTIONS
  */
-s32 sampleSwitch_bdbNetworkSteerStart(void *arg){
+s32 switch_bdbNetworkSteerStart(void *arg){
 	bdb_networkSteerStart();
 
 	steerTimerEvt = NULL;
 	return -1;
 }
 
-#if FIND_AND_BIND_SUPPORT
-s32 sampleSwitch_bdbFindAndBindStart(void *arg){
+s32 switch_bdbFindAndBindStart(void *arg){
 	BDB_ATTR_GROUP_ID_SET(0x1234);//only for initiator
 	bdb_findAndBindStart(BDB_COMMISSIONING_ROLE_INITIATOR);
 
 	g_switchAppCtx.bdbFBTimerEvt = NULL;
 	return -1;
 }
-#endif
 
-s32 sampleSwitch_rejoinBacckoff(void *arg){
+s32 switch_rejoinBacckoff(void *arg){
 	if(zb_isDeviceFactoryNew()){
 		switchRejoinBackoffTimerEvt = NULL;
 		return -1;
@@ -132,13 +131,8 @@ void zbdemo_bdbInitCb(u8 status, u8 joinedNetwork){
 		if(joinedNetwork){
 			zb_setPollRate(POLL_RATE * 3);
 
-#ifdef ZCL_OTA
 			ota_queryStart(OTA_PERIODIC_QUERY_INTERVAL);
-#endif
 
-#ifdef ZCL_POLL_CTRL
-			sampleSwitch_zclCheckInStart();
-#endif
 		}else{
 			u16 jitter = 0;
 			do{
@@ -148,13 +142,13 @@ void zbdemo_bdbInitCb(u8 status, u8 joinedNetwork){
 			if(steerTimerEvt){
 				TL_ZB_TIMER_CANCEL(&steerTimerEvt);
 			}
-			steerTimerEvt = TL_ZB_TIMER_SCHEDULE(sampleSwitch_bdbNetworkSteerStart, NULL, jitter);
+			steerTimerEvt = TL_ZB_TIMER_SCHEDULE(switch_bdbNetworkSteerStart, NULL, jitter);
 		}
 	}else{
 		if(joinedNetwork){
 //			zb_rejoinReqWithBackOff(zb_apsChannelMaskGet(), g_bdbAttrs.scanDuration);
 			if(!switchRejoinBackoffTimerEvt){
-				switchRejoinBackoffTimerEvt = TL_ZB_TIMER_SCHEDULE(sampleSwitch_rejoinBacckoff, NULL, 60 * 1000);
+				switchRejoinBackoffTimerEvt = TL_ZB_TIMER_SCHEDULE(switch_rejoinBacckoff, NULL, 60 * 1000);
 			}
 		}
 	}
@@ -191,18 +185,11 @@ void zbdemo_bdbCommissioningCb(u8 status, void *arg){
 				zb_rejoinReq(zb_apsChannelMaskGet(), g_bdbAttrs.scanDuration);
 			}
 
-#ifdef ZCL_POLL_CTRL
-			sampleSwitch_zclCheckInStart();
-#endif
-#ifdef ZCL_OTA
 			ota_queryStart(OTA_PERIODIC_QUERY_INTERVAL);
-#endif
-#if FIND_AND_BIND_SUPPORT
 			//start Finding & Binding
 			if(!g_switchAppCtx.bdbFBTimerEvt){
-				g_switchAppCtx.bdbFBTimerEvt = TL_ZB_TIMER_SCHEDULE(sampleSwitch_bdbFindAndBindStart, NULL, 50);
+				g_switchAppCtx.bdbFBTimerEvt = TL_ZB_TIMER_SCHEDULE(switch_bdbFindAndBindStart, NULL, 50);
 			}
-#endif
 			break;
 		case BDB_COMMISSION_STA_IN_PROGRESS:
 			break;
@@ -220,7 +207,7 @@ void zbdemo_bdbCommissioningCb(u8 status, void *arg){
 				if(steerTimerEvt){
 					TL_ZB_TIMER_CANCEL(&steerTimerEvt);
 				}
-				steerTimerEvt = TL_ZB_TIMER_SCHEDULE(sampleSwitch_bdbNetworkSteerStart, NULL, jitter);
+				steerTimerEvt = TL_ZB_TIMER_SCHEDULE(switch_bdbNetworkSteerStart, NULL, jitter);
 			}
 			break;
 		case BDB_COMMISSION_STA_FORMATION_FAILURE:
@@ -240,7 +227,7 @@ void zbdemo_bdbCommissioningCb(u8 status, void *arg){
 			break;
 		case BDB_COMMISSION_STA_REJOIN_FAILURE:
 			if(!switchRejoinBackoffTimerEvt){
-				switchRejoinBackoffTimerEvt = TL_ZB_TIMER_SCHEDULE(sampleSwitch_rejoinBacckoff, NULL, 60 * 1000);
+				switchRejoinBackoffTimerEvt = TL_ZB_TIMER_SCHEDULE(switch_rejoinBacckoff, NULL, 60 * 1000);
 			}
 			break;
 		default:
@@ -249,11 +236,10 @@ void zbdemo_bdbCommissioningCb(u8 status, void *arg){
 }
 
 
-extern void sampleSwitch_zclIdentifyCmdHandler(u8 endpoint, u16 srcAddr, u16 identifyTime);
+extern void switch_zclIdentifyCmdHandler(u8 endpoint, u16 srcAddr, u16 identifyTime);
+
 void zbdemo_bdbIdentifyCb(u8 endpoint, u16 srcAddr, u16 identifyTime){
-#if FIND_AND_BIND_SUPPORT
-	sampleSwitch_zclIdentifyCmdHandler(endpoint, srcAddr, identifyTime);
-#endif
+	switch_zclIdentifyCmdHandler(endpoint, srcAddr, identifyTime);
 }
 
 /*********************************************************************
@@ -266,7 +252,6 @@ void zbdemo_bdbIdentifyCb(u8 endpoint, u16 srcAddr, u16 identifyTime){
  * @return  None
  */
 void zbdemo_bdbFindBindSuccessCb(findBindDst_t *pDstInfo){
-#if FIND_AND_BIND_SUPPORT
 	epInfo_t dstEpInfo;
 	TL_SETSTRUCTCONTENT(dstEpInfo, 0);
 
@@ -275,14 +260,12 @@ void zbdemo_bdbFindBindSuccessCb(findBindDst_t *pDstInfo){
 	dstEpInfo.dstEp = pDstInfo->endpoint;
 	dstEpInfo.profileId = HA_PROFILE_ID;
 
-	zcl_identify_identifyCmd(SAMPLE_SWITCH_ENDPOINT, &dstEpInfo, FALSE, 0, 0);
-#endif
+	zcl_identify_identifyCmd(ENDPOINT_1, &dstEpInfo, FALSE, 0, 0);
 }
 
 
 
-#ifdef ZCL_OTA
-void sampleSwitch_otaProcessMsgHandler(u8 evt, u8 status)
+void switch_otaProcessMsgHandler(u8 evt, u8 status)
 {
 	//printf("sampleSwitch_otaProcessMsgHandler: status = %x\n", status);
 	if(evt == OTA_EVT_START){
@@ -303,10 +286,9 @@ void sampleSwitch_otaProcessMsgHandler(u8 evt, u8 status)
 		zb_setPollRate(POLL_RATE * 3);
 	}
 }
-#endif
 
 /*********************************************************************
- * @fn      sampleSwitch_leaveCnfHandler
+ * @fn      switch_leaveCnfHandler
  *
  * @brief   Handler for ZDO Leave Confirm message.
  *
@@ -314,7 +296,7 @@ void sampleSwitch_otaProcessMsgHandler(u8 evt, u8 status)
  *
  * @return  None
  */
-void sampleSwitch_leaveCnfHandler(nlme_leave_cnf_t *pLeaveCnf)
+void switch_leaveCnfHandler(nlme_leave_cnf_t *pLeaveCnf)
 {
     if(pLeaveCnf->status == SUCCESS){
     	//SYSTEM_RESET();
@@ -326,7 +308,7 @@ void sampleSwitch_leaveCnfHandler(nlme_leave_cnf_t *pLeaveCnf)
 }
 
 /*********************************************************************
- * @fn      sampleSwitch_leaveIndHandler
+ * @fn      switch_leaveIndHandler
  *
  * @brief   Handler for ZDO leave indication message.
  *
@@ -334,9 +316,9 @@ void sampleSwitch_leaveCnfHandler(nlme_leave_cnf_t *pLeaveCnf)
  *
  * @return  None
  */
-void sampleSwitch_leaveIndHandler(nlme_leave_ind_t *pLeaveInd)
+void switch_leaveIndHandler(nlme_leave_ind_t *pLeaveInd)
 {
-    //printf("sampleSwitch_leaveIndHandler, rejoin = %d\n", pLeaveInd->rejoin);
+    //printf("switch_leaveIndHandler, rejoin = %d\n", pLeaveInd->rejoin);
     //printfArray(pLeaveInd->device_address, 8);
 }
 

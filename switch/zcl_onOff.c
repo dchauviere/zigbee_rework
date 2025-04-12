@@ -31,8 +31,9 @@
 #include "tl_common.h"
 #include "zb_api.h"
 #include "zcl_include.h"
-#include "sampleSwitch.h"
-#include "sampleSwitchCtrl.h"
+#include "endpointCfg.h"
+#include "zclApp.h"
+#include "switchCtrl.h"
 
 /**********************************************************************
  * LOCAL CONSTANTS
@@ -44,12 +45,14 @@
  */
 static ev_timer_event_t *onWithTimedOffTimerEvt = NULL;
 
+zcl_onOffAttr_t g_zcl_onOffAttrs[BUTTON_NUM];
+
 /**********************************************************************
  * FUNCTIONS
  */
 
 /*********************************************************************
- * @fn      sampleSwitch_onOffInit
+ * @fn      switch_onOffInit
  *
  * @brief
  *
@@ -57,17 +60,17 @@ static ev_timer_event_t *onWithTimedOffTimerEvt = NULL;
  *
  * @return  None
  */
-void sampleSwitch_onOffInit(void)
+void switch_onOffInit(void)
 {
 	zcl_onOffAttr_t *pOnOff1 = zcl_onoffAttrGet(0);
 	zcl_onOffAttr_t *pOnOff2 = zcl_onoffAttrGet(1);
 
-	sampleSwitch_onOffUpdate(1, pOnOff1->onOff);
-	sampleSwitch_onOffUpdate(2, pOnOff2->onOff);
+	switch_onOffUpdate(1, pOnOff1->onOff);
+	switch_onOffUpdate(2, pOnOff2->onOff);
 }
 
 /*********************************************************************
- * @fn      sampleSwitch_onOffUpdate
+ * @fn      switch_onOffUpdate
  *
  * @brief
  *
@@ -75,7 +78,7 @@ void sampleSwitch_onOffInit(void)
  *
  * @return  None
  */
-void sampleSwitch_onOffUpdate(u8 btn, u8 cmd)
+void switch_onOffUpdate(u8 btn, u8 cmd)
 {
 	zcl_onOffAttr_t *pOnOff = zcl_onoffAttrGet(btn-1);
 	bool onOff = ZCL_ONOFF_STATUS_ON;
@@ -103,16 +106,14 @@ void sampleSwitch_onOffUpdate(u8 btn, u8 cmd)
 		pOnOff->onTime = 0;
 	}
 
-#ifdef ZCL_SCENE
 	zcl_sceneAttr_t *pScene = zcl_sceneAttrGet();
 	pScene->sceneValid = 0;
-#endif
 
 	switch_refresh(btn, SWITCH_STA_ON_OFF);
 }
 
 /*********************************************************************
- * @fn      sampleSwitch_onWithTimedOffTimerCb
+ * @fn      switch_onWithTimedOffTimerCb
  *
  * @brief   timer event to process the ON_WITH_TIMED_OFF command
  *
@@ -120,7 +121,7 @@ void sampleSwitch_onOffUpdate(u8 btn, u8 cmd)
  *
  * @return  0: timer continue on; -1: timer will be canceled
  */
-static s32 sampleSwitch_onWithTimedOffTimerCb(void *arg)
+static s32 switch_onWithTimedOffTimerCb(void *arg)
 {
 	u8 btn = *(u8 *)arg;
 	zcl_onOffAttr_t *pOnOff = zcl_onoffAttrGet(btn-1);
@@ -129,7 +130,7 @@ static s32 sampleSwitch_onWithTimedOffTimerCb(void *arg)
 		pOnOff->onTime--;
 		if(pOnOff->onTime <= 0){
 			pOnOff->offWaitTime = 0;
-			sampleSwitch_onOffUpdate(btn, ZCL_CMD_ONOFF_OFF);
+			switch_onOffUpdate(btn, ZCL_CMD_ONOFF_OFF);
 		}
 	}
 
@@ -150,7 +151,7 @@ static s32 sampleSwitch_onWithTimedOffTimerCb(void *arg)
 }
 
 /*********************************************************************
- * @fn      sampleSwitch_onWithTimedOffTimerStart
+ * @fn      switch_onWithTimedOffTimerStart
  *
  * @brief   start the onWithTimedOff timer
  *
@@ -158,17 +159,17 @@ static s32 sampleSwitch_onWithTimedOffTimerCb(void *arg)
  *
  * @return
  */
-static void sampleSwitch_onWithTimedOffTimerStart(u8 btn)
+static void switch_onWithTimedOffTimerStart(u8 btn)
 {
 	if(onWithTimedOffTimerEvt){
 		TL_ZB_TIMER_CANCEL(&onWithTimedOffTimerEvt);
 	}
 	void *ptr = &btn;
-	onWithTimedOffTimerEvt = TL_ZB_TIMER_SCHEDULE(sampleSwitch_onWithTimedOffTimerCb, ptr, ZCL_ONOFF_TIMER_INTERVAL);
+	onWithTimedOffTimerEvt = TL_ZB_TIMER_SCHEDULE(switch_onWithTimedOffTimerCb, ptr, ZCL_ONOFF_TIMER_INTERVAL);
 }
 
 /*********************************************************************
- * @fn      sampleSwitch_onoff_onWithTimedOffProcess
+ * @fn      switch_onoff_onWithTimedOffProcess
  *
  * @brief
  *
@@ -176,7 +177,7 @@ static void sampleSwitch_onWithTimedOffTimerStart(u8 btn)
  *
  * @return  None
  */
-static void sampleSwitch_onoff_onWithTimedOffProcess(u8 btn, zcl_onoff_onWithTimeOffCmd_t *cmd)
+static void switch_onoff_onWithTimedOffProcess(u8 btn, zcl_onoff_onWithTimeOffCmd_t *cmd)
 {
 	zcl_onOffAttr_t *pOnOff = zcl_onoffAttrGet(btn-1);
 
@@ -189,18 +190,18 @@ static void sampleSwitch_onoff_onWithTimedOffProcess(u8 btn, zcl_onoff_onWithTim
 	}else{
 		pOnOff->onTime = max2(pOnOff->onTime, cmd->onTime);
 		pOnOff->offWaitTime = cmd->offWaitTime;
-		sampleSwitch_onOffUpdate(btn, ZCL_CMD_ONOFF_ON);
+		switch_onOffUpdate(btn, ZCL_CMD_ONOFF_ON);
 	}
 
 	if((pOnOff->onTime < 0xFFFF) && (pOnOff->offWaitTime < 0xFFFF)){
 		if(pOnOff->onTime || pOnOff->offWaitTime){
-			sampleSwitch_onWithTimedOffTimerStart(btn);
+			switch_onWithTimedOffTimerStart(btn);
 		}
 	}
 }
 
 /*********************************************************************
- * @fn      sampleSwitch_onoff_offWithEffectProcess
+ * @fn      switch_onoff_offWithEffectProcess
  *
  * @brief
  *
@@ -208,18 +209,18 @@ static void sampleSwitch_onoff_onWithTimedOffProcess(u8 btn, zcl_onoff_onWithTim
  *
  * @return  None
  */
-static void sampleSwitch_onoff_offWithEffectProcess(u8 btn, zcl_onoff_offWithEffectCmd_t *cmd)
+static void switch_onoff_offWithEffectProcess(u8 btn, zcl_onoff_offWithEffectCmd_t *cmd)
 {
 	zcl_onOffAttr_t *pOnOff = zcl_onoffAttrGet(btn-1);
 	pOnOff->globalSceneControl = FALSE;
 
 	//TODO:
 
-	sampleSwitch_onOffUpdate(btn, ZCL_CMD_ONOFF_OFF);
+	switch_onOffUpdate(btn, ZCL_CMD_ONOFF_OFF);
 }
 
 /*********************************************************************
- * @fn      sampleSwitch_onoff_onWithRecallGlobalSceneProcess
+ * @fn      switch_onoff_onWithRecallGlobalSceneProcess
  *
  * @brief
  *
@@ -227,16 +228,16 @@ static void sampleSwitch_onoff_offWithEffectProcess(u8 btn, zcl_onoff_offWithEff
  *
  * @return  None
  */
-static void sampleSwitch_onoff_onWithRecallGlobalSceneProcess(u8 btn)
+static void switch_onoff_onWithRecallGlobalSceneProcess(u8 btn)
 {
-	zcl_onOffAttr_t *pOnOff = zcl_onoffAttrGet(btn);
+	zcl_onOffAttr_t *pOnOff = zcl_onoffAttrGet(btn-1);
 	pOnOff->globalSceneControl = TRUE;
 
 	//TODO:
 }
 
 /*********************************************************************
- * @fn      sampleSwitch_onOffCb
+ * @fn      switch_onOffCb
  *
  * @brief   Handler for ZCL ONOFF command. This function will set ONOFF attribute first.
  *
@@ -246,23 +247,23 @@ static void sampleSwitch_onoff_onWithRecallGlobalSceneProcess(u8 btn)
  *
  * @return  status_t
  */
-status_t sampleSwitch_onOffCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPayload)
+status_t switch_onOffCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPayload)
 {
-	if(pAddrInfo->dstEp == SAMPLE_SWITCH_ENDPOINT || pAddrInfo->dstEp == SAMPLE_SWITCH_ENDPOINT_2){
+	if(pAddrInfo->dstEp <= BUTTON_NUM){
 		switch(cmdId){
 			case ZCL_CMD_ONOFF_ON:
 			case ZCL_CMD_ONOFF_OFF:
 			case ZCL_CMD_ONOFF_TOGGLE:
-				sampleSwitch_onOffUpdate(pAddrInfo->dstEp, cmdId);
+				switch_onOffUpdate(pAddrInfo->dstEp, cmdId);
 				break;
 			case ZCL_CMD_OFF_WITH_EFFECT:
-				sampleSwitch_onoff_offWithEffectProcess(pAddrInfo->dstEp, (zcl_onoff_offWithEffectCmd_t *)cmdPayload);
+				switch_onoff_offWithEffectProcess(pAddrInfo->dstEp, (zcl_onoff_offWithEffectCmd_t *)cmdPayload);
 				break;
 			case ZCL_CMD_ON_WITH_RECALL_GLOBAL_SCENE:
-				sampleSwitch_onoff_onWithRecallGlobalSceneProcess(pAddrInfo->dstEp);
+				switch_onoff_onWithRecallGlobalSceneProcess(pAddrInfo->dstEp);
 				break;
 			case ZCL_CMD_ON_WITH_TIMED_OFF:
-				sampleSwitch_onoff_onWithTimedOffProcess(pAddrInfo->dstEp, (zcl_onoff_onWithTimeOffCmd_t *)cmdPayload);
+				switch_onoff_onWithTimedOffProcess(pAddrInfo->dstEp, (zcl_onoff_onWithTimeOffCmd_t *)cmdPayload);
 				break;
 			default:
 				break;
@@ -270,6 +271,79 @@ status_t sampleSwitch_onOffCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *
 	}
 
 	return ZCL_STA_SUCCESS;
+}
+
+/*********************************************************************
+ * @fn      zcl_onOffAttr_save
+ *
+ * @brief
+ *
+ * @param   None
+ *
+ * @return
+ */
+nv_sts_t zcl_onOffAttr_save(void)
+{
+	nv_sts_t st = NV_SUCC;
+	bool changed = false;
+
+	zcl_onOffAttr_t zcl_nv_onOff[BUTTON_NUM];
+
+	st = nv_flashReadNew(1, NV_MODULE_ZCL,  NV_ITEM_ZCL_ON_OFF, sizeof(zcl_onOffAttr_t)*BUTTON_NUM, (u8*)&zcl_nv_onOff);
+
+	if(st == NV_SUCC){
+		for(u8 ep=0;ep<BUTTON_NUM;ep++){
+			if((zcl_nv_onOff[ep].onOff != g_zcl_onOffAttrs[ep].onOff) || (zcl_nv_onOff[ep].startUpOnOff != g_zcl_onOffAttrs[ep].startUpOnOff) ||
+		   		(zcl_nv_onOff[ep].onTime != g_zcl_onOffAttrs[ep].onTime) || (zcl_nv_onOff[ep].offWaitTime != g_zcl_onOffAttrs[ep].offWaitTime) ||
+				(zcl_nv_onOff[ep].globalSceneControl != g_zcl_onOffAttrs[ep].globalSceneControl) ){
+				changed = true;
+			}
+		}
+	}
+
+	if (changed == true || st == NV_ITEM_NOT_FOUND) {
+		st = nv_flashWriteNew(1, NV_MODULE_ZCL, NV_ITEM_ZCL_ON_OFF, sizeof(zcl_onOffAttr_t)*BUTTON_NUM, (u8*)&g_zcl_onOffAttrs);
+	}
+
+	return st;
+}
+
+/*********************************************************************
+ * @fn      zcl_onOffAttr_restore
+ *
+ * @brief
+ *
+ * @param   None
+ *
+ * @return
+ */
+nv_sts_t zcl_onOffAttr_restore(void)
+{
+	nv_sts_t st = NV_SUCC;
+
+	zcl_onOffAttr_t zcl_nv_onOff[BUTTON_NUM];
+
+	st = nv_flashReadNew(1, NV_MODULE_ZCL,  NV_ITEM_ZCL_ON_OFF, sizeof(zcl_onOffAttr_t)*BUTTON_NUM, (u8*)&zcl_nv_onOff);
+
+	if(st == NV_SUCC){
+		for(u8 ep=0;ep<BUTTON_NUM;ep++){
+			g_zcl_onOffAttrs[ep].onOff				= zcl_nv_onOff[ep].onOff;
+			g_zcl_onOffAttrs[ep].globalSceneControl	= zcl_nv_onOff[ep].globalSceneControl;
+			g_zcl_onOffAttrs[ep].onTime				= zcl_nv_onOff[ep].onTime;
+			g_zcl_onOffAttrs[ep].offWaitTime		= zcl_nv_onOff[ep].offWaitTime;
+			g_zcl_onOffAttrs[ep].startUpOnOff 		= zcl_nv_onOff[ep].startUpOnOff;
+		}
+	}else{
+		for(u8 ep=0;ep<BUTTON_NUM;ep++){
+			g_zcl_onOffAttrs[ep].onOff				= 0x00;
+			g_zcl_onOffAttrs[ep].globalSceneControl	= 1;
+			g_zcl_onOffAttrs[ep].onTime				= 0x0000;
+			g_zcl_onOffAttrs[ep].offWaitTime		= 0x0000;
+			g_zcl_onOffAttrs[ep].startUpOnOff 		= ZCL_START_UP_ONOFF_SET_ONOFF_TO_ON;
+		}
+	}
+
+	return st;
 }
 
 #endif  /* __PROJECT_TL_SWITCH__ */

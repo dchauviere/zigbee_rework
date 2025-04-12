@@ -59,11 +59,6 @@ extern "C" {
 	#define VOLTAGE_DETECT_ADC_PIN		ADC_GPIO_PB0
 #endif
 
-/*
- * Enable UART to upgrade image.
- */
-#define UART_ENABLE						1
-
 /**********************************************************************
  * EV configuration
  */
