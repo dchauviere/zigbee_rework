@@ -7,12 +7,6 @@ cmake_minimum_required(VERSION 3.22)
 
 SET(TARGET bootloader)
 
-set(DEVICES_LIST "")
-list(APPEND DEVICES_LIST "TS0012")
-#list(APPEND TARGETS_LIST ${TARGET}_1)
-message(DEVICES_LIST=${DEVICES_LIST})
-
-
 # ADD_DEFINITIONS
 add_compile_definitions(
     MCU_CORE_${TELINK_PLATFORM}=1
@@ -31,7 +25,16 @@ SET(ZIGBEE_SRC
     ${SDK_PREFIX}/platform/tc32/div_mod.S
     ${SDK_PREFIX}/platform/chip_${TELINK_PLATFORM}/flash.c
     ${SDK_PREFIX}/platform/chip_${TELINK_PLATFORM}/adc.c
+    ${SDK_PREFIX}/platform/chip_${TELINK_PLATFORM}/flash/flash_common.c
     ${SDK_PREFIX}/platform/chip_${TELINK_PLATFORM}/flash/flash_mid13325e.c
+    ${SDK_PREFIX}/platform/chip_${TELINK_PLATFORM}/flash/flash_mid011460c8.c
+    ${SDK_PREFIX}/platform/chip_${TELINK_PLATFORM}/flash/flash_mid1060c8.c
+    ${SDK_PREFIX}/platform/chip_${TELINK_PLATFORM}/flash/flash_mid134051.c
+    ${SDK_PREFIX}/platform/chip_${TELINK_PLATFORM}/flash/flash_mid136085.c
+    ${SDK_PREFIX}/platform/chip_${TELINK_PLATFORM}/flash/flash_mid1360c8.c
+    ${SDK_PREFIX}/platform/chip_${TELINK_PLATFORM}/flash/flash_mid1360eb.c
+    ${SDK_PREFIX}/platform/chip_${TELINK_PLATFORM}/flash/flash_mid14325e.c
+    ${SDK_PREFIX}/platform/chip_${TELINK_PLATFORM}/flash/flash_mid1460c8.c
 
     ${SDK_PREFIX}/proj/common/list.c
     ${SDK_PREFIX}/proj/common/mempool.c
@@ -56,6 +59,7 @@ SET(ZIGBEE_SRC
     ${SDK_PREFIX}/proj/os/ev_buffer.c
     ${SDK_PREFIX}/proj/os/ev_poll.c
     ${SDK_PREFIX}/proj/os/ev_queue.c
+    ${SDK_PREFIX}/proj/os/ev_rtc.c
     ${SDK_PREFIX}/proj/os/ev_timer.c
 
     # ${SDK_PREFIX}/apps/common/main.c
@@ -81,7 +85,7 @@ INCLUDE_DIRECTORIES(
 
     # Zigbee sources reference zcl_options.h
 #    ${PROJECT_SOURCE_DIR}/src
-#    ${PROJECT_SOURCE_DIR}/common/
+    ${PROJECT_SOURCE_DIR}/lib/common/
     ${PROJECT_SOURCE_DIR}/bootloader
 #    ${PROJECT_SOURCE_DIR}/src/custom_zcl
 )
@@ -97,25 +101,23 @@ file( GLOB SOURCES1 *.c *.cpp *.h *.S common/*.c common/*.h )
 
 SET (SOURCES  ${SOURCES1} ${ZIGBEE_SRC})
 
-foreach(device_name IN LISTS DEVICES_LIST)
-    ADD_EXECUTABLE(${TARGET}_${device_name} ${SOURCES})
-    target_compile_definitions(${TARGET}_${device_name} PRIVATE BUILD_${device_name}=1)
-    TARGET_LINK_LIBRARIES(${TARGET}_${device_name}
+ADD_EXECUTABLE(${TARGET}_${BOARD} ${SOURCES})
+target_compile_definitions(${TARGET}_${BOARD} PRIVATE BUILD_${BOARD}=1)
+TARGET_LINK_LIBRARIES(${TARGET}_${BOARD}
         -Wl,--start-group
 	   drivers_${TELINK_PLATFORM}
 #	timestamp
         -Wl,--end-group
     )
-    ADD_BIN_TARGET(${TARGET}_${device_name} ${PROJECT_SOURCE_DIR}/tools)
-endforeach()
+ADD_BIN_TARGET(${TARGET}_${BOARD} ${PROJECT_SOURCE_DIR}/tools)
 
-# ADD_OTA_TARGET(${TARGET} ${PROJECT_SOURCE_DIR}/tools)
-# ADD_TUYA_OTA_TARGET(${TARGET} ${PROJECT_SOURCE_DIR}/tools 0x1141 0xD3A3 0xFF)  
+ADD_OTA_TARGET(${TARGET}_${BOARD} ${PROJECT_SOURCE_DIR}/tools)
+# ADD_TUYA_OTA_TARGET(${TARGET}_${BOARD} ${PROJECT_SOURCE_DIR}/tools 0x1141 0xD3A3 0xFF)  
 
 
-add_custom_target(${TARGET})
-foreach(device_name IN LISTS DEVICES_LIST)
-    message(device_name=${device_name})
-    add_dependencies(bootloader ${TARGET}_${device_name})
-    add_dependencies(bootloader ${TARGET}_${device_name}.bin)
-endforeach()
+# add_custom_target(${TARGET})
+# foreach(device_name IN LISTS DEVICES_LIST)
+#     message(device_name=${device_name})
+#     add_dependencies(bootloader ${TARGET}_${device_name})
+#     add_dependencies(bootloader ${TARGET}_${device_name}.bin)
+# endforeach()

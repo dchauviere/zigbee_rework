@@ -26,16 +26,21 @@
 #pragma once
 
 
-#include "../lib/common/version.h"
 #include "../lib/common/comm_cfg.h"
+
+
+#define APP_RELEASE							0x10//app release 1.0
+#define APP_BUILD							0x8//app build 01
+#define STACK_RELEASE						0x30//stack release 3.0
+#define STACK_BUILD							0x01//stack build 01
 
 /*********************************************************************************************
  * During OTA upgrade, the upgraded device will check the rules of the following three fields.
  * Refer to ZCL OTA specification for details.
  */
-//#define MANUFACTURER_CODE_TELINK           	0x1141//Telink ID
-//#define	IMAGE_TYPE							((CHIP_TYPE << 8) | IMAGE_TYPE_BOOTLOADER)
-//#define	FILE_VERSION					  	((APP_RELEASE << 24) | (APP_BUILD << 16) | (STACK_RELEASE << 8) | STACK_BUILD)
+#define MANUFACTURER_CODE_TELINK           	0x1141//Telink ID
+#define	IMAGE_TYPE							((CHIP_TYPE << 8) | IMAGE_TYPE_BOOTLOADER)
+#define	FILE_VERSION					  	((APP_RELEASE << 24) | (APP_BUILD << 16) | (STACK_RELEASE << 8) | STACK_BUILD)
 
 /* Pre-compiled link configuration. */
 #define IS_BOOT_LOADER_IMAGE				1
@@ -45,3 +50,12 @@
 #if !defined(BOOT_LOADER_MODE) || (BOOT_LOADER_MODE == 0)
 	#error "Please define BOOT_LOADER_MODE = 1"
 #endif
+
+/*
+ * Enable UART to upgrade image.
+ */
+#define UART_ENABLE						1
+
+#define UART_PRINTF_MODE 				0
+
+#include "../lib/boards/boards.h"

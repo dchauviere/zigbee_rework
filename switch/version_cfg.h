@@ -27,24 +27,9 @@
 
 #include "../lib/common/comm_cfg.h"
 
-#if defined(MCU_CORE_826x)
-	#if (CHIP_8269)
-		#define CHIP_TYPE					TLSR_8269
-	#else
-		#define CHIP_TYPE					TLSR_8267
-	#endif
-#elif defined(MCU_CORE_8258)
-		#define CHIP_TYPE					TLSR_8258_1M//TLSR_8258_512K
-#elif defined(MCU_CORE_8278)
-		#define CHIP_TYPE					TLSR_8278
-#elif defined(MCU_CORE_B91)
-		#define CHIP_TYPE					TLSR_B91
-#elif defined(MCU_CORE_B92)
-		#define CHIP_TYPE					TLSR_B92
-#endif
 
-#define APP_RELEASE							0x10//app release 1.0
-#define APP_BUILD							0x8//app build 01
+#define APP_RELEASE							0x20//app release 1.0
+#define APP_BUILD							0x02//app build 01
 #define STACK_RELEASE						0x30//stack release 3.0
 #define STACK_BUILD							0x01//stack build 01
 
@@ -65,20 +50,25 @@
 #define IMAGE_OFFSET						APP_IMAGE_ADDR
 
 #ifndef ZCL_BASIC_MFG_NAME
-#define ZCL_BASIC_MFG_NAME     {6,'D','C','E','D','e','v'}
+#define ZCL_BASIC_MFG_NAME     {4,'M','o','e','s'}
 #endif
 #ifndef ZCL_BASIC_MODEL_ID
-#define ZCL_BASIC_MODEL_ID	   {14,'Z','S','-','E','U','B','2','_','T','S','0','0','1','2'}
-#endif
-
-#ifndef ZCL_BASIC_BUILD_ID
-	#define ZCL_BASIC_BUILD_ID     {10,'0','1','0','5','0','2','2','0','2','5'}
+#define ZCL_BASIC_MODEL_ID	   {7,'Z','S','-','E','U','B', BUTTON_NUM + 0x30}
 #endif
 
 #ifndef ZCL_BASIC_SW_BUILD_ID //max 16 chars
-	#define ZCL_BASIC_SW_BUILD_ID       {7,(APP_RELEASE >> 4) + 0x30,'.',APP_BUILD + 0x30,'.',(STACK_RELEASE >> 4) + 0x30,'.',STACK_BUILD + 0x30}
+	#define ZCL_BASIC_SW_BUILD_ID       {9,'1','.','0','.','0','-','D','C','E'}
 #endif
 
 #ifndef ZCL_BASIC_DATE_CODE
-	#define ZCL_BASIC_DATE_CODE  {8,'2','0','2','5','0','2','0','7'}
+	#define ZCL_BASIC_DATE_CODE  {8,'2','0','2','5','0','4','1','2'}
 #endif
+
+/*
+ * Enable UART to upgrade image.
+ */
+#define UART_ENABLE						0
+
+#define UART_PRINTF_MODE 				0
+
+#include "../lib/boards/boards.h"

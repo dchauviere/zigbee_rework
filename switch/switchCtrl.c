@@ -5,13 +5,12 @@
  */
 #include "tl_common.h"
 #include "zcl_include.h"
-#include "sampleSwitch.h"
-#include "sampleSwitchCtrl.h"
+#include "endpointCfg.h"
+#include "switchApp.h"
+#include "switchCtrl.h"
 
-extern void sampleSwitch_onOffInit(void);
-
-const u16 RELAYS[2] = {RELAY1, RELAY2};
-const u16 LEDS[2] = {LED1, LED2};
+const u16 RELAYS[BUTTON_NUM] = RELAYS_PIN;
+const u16 LEDS[BUTTON_NUM] = LEDS_PIN;
 
 /*********************************************************************
  * @fn      switch_init
@@ -24,10 +23,10 @@ const u16 LEDS[2] = {LED1, LED2};
  */
 void switch_init(void)
 {
-	drv_gpio_write(RELAY1, 0);
-	drv_gpio_write(RELAY2, 0);
-	drv_gpio_write(LED1, 0);
-	drv_gpio_write(LED2, 0);
+	for(u8 l=0;l<BUTTON_NUM;l++){
+		drv_gpio_write(RELAYS[l], 0);
+		drv_gpio_write(LEDS[l], 0);
+	}
 }
 
 /*********************************************************************
@@ -41,7 +40,7 @@ void switch_init(void)
  */
 void switch_adjust(void)
 {
-	sampleSwitch_onOffInit();
+	switch_onOffInit();
 }
 
 /*********************************************************************
@@ -91,11 +90,9 @@ static void switch_onOffUpdate(u8 btn)
 void switch_refresh(u8 btn, switchSta_e sta)
 {
 	switch(sta){
-#if ZCL_ON_OFF_SUPPORT
 		case SWITCH_STA_ON_OFF:
 			switch_onOffUpdate(btn);
 			break;
-#endif
 		default:
 			return;
 			break;

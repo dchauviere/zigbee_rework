@@ -4,19 +4,11 @@ cmake_minimum_required(VERSION 3.25)
 
 SET(TARGET switch)
 
-IF(NOT MIMIC_HEIMAN)
-    SET(MIMIC_HEIMAN 0)
-ELSE()
-    SET(TARGET ${TARGET}_heiman)
-ENDIF()
-
 ADD_DEFINITIONS(
-    -DBOARD=BOARD_8258_TS0012
     -DROUTER=1
     -DMCU_CORE_${TELINK_PLATFORM}=1
     -DMCU_STARTUP_${TELINK_PLATFORM}=1
     -D__PROJECT_TL_SWITCH__=1
-    -DMIMIC_HEIMAN=${MIMIC_HEIMAN}
 )
 
 ################################
@@ -127,8 +119,6 @@ SET(ZIGBEE_SRC
     ${SDK_PREFIX}/zigbee/ota/ota.c
     ${SDK_PREFIX}/zigbee/ota/otaEpCfg.c
 
-
-
     ${SDK_PREFIX}/zbhci/zbhci.c
     ${SDK_PREFIX}/zbhci/zbhciCmdProcess.c
     ${SDK_PREFIX}/zbhci/zbhci_zclHandler.c
@@ -136,7 +126,6 @@ SET(ZIGBEE_SRC
     ${SDK_PREFIX}/zbhci/usbCDC/zbhci_usb_cdc.c
     ${SDK_PREFIX}/zbhci/usbHID/zbhci_usb_hid.c
     ${SDK_PREFIX}/zbhci/usbPrint/hci_usbPrint.c
-
 
     ${SDK_PREFIX}/proj/common/list.c
     ${SDK_PREFIX}/proj/common/mempool.c
@@ -206,20 +195,15 @@ file( GLOB SOURCES1 *.c *.cpp *.h *.S lib/common/*.c lib/common/*.h custom_zcl/*
 
 SET (SOURCES  ${SOURCES1} ${ZIGBEE_SRC})
 
-ADD_EXECUTABLE(${TARGET} ${SOURCES})
-TARGET_LINK_LIBRARIES(${TARGET}
-        -Wl,--start-group
-
-	#ZigBee
-
+ADD_EXECUTABLE(${TARGET}_${BOARD} ${SOURCES})
+TARGET_LINK_LIBRARIES(${TARGET}_${BOARD}
+    -Wl,--start-group
 	zb_router
-    #zb_ed
 	drivers_${TELINK_PLATFORM}
 	timestamp
-
     -Wl,--end-group
 )
 
-ADD_BIN_TARGET(${TARGET} ${PROJECT_SOURCE_DIR}/tools)
-ADD_OTA_TARGET(${TARGET} ${PROJECT_SOURCE_DIR}/tools)
-#ADD_TUYA_OTA_TARGET(${TARGET} ${PROJECT_SOURCE_DIR}/tools 0x1141 0xD3A3 0xFF) 
+ADD_BIN_TARGET(${TARGET}_${BOARD} ${PROJECT_SOURCE_DIR}/tools)
+ADD_OTA_TARGET(${TARGET}_${BOARD} ${PROJECT_SOURCE_DIR}/tools)
+ADD_TUYA_OTA_TARGET(${TARGET}_${BOARD} ${PROJECT_SOURCE_DIR}/tools 0x1141 0xD3A3 0xFF) 

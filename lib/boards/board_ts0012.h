@@ -30,7 +30,13 @@
 extern "C" {
 #endif
 
-// BUTTON 
+#define HARDWARE_REV                0x01
+#define CHIP_TYPE					TLSR_8258_1M
+
+// BUTTON
+
+#define BUTTON_NUM                  2
+
 // GPIO_PC4
 #define BUTTON1               		GPIO_PC4
 #define PC4_FUNC			  		AS_GPIO
@@ -45,27 +51,42 @@ extern "C" {
 #define PB6_INPUT_ENABLE	  		1
 #define	PULL_WAKEUP_SRC_PB6	  		PM_PIN_PULLUP_10K
 
-// LED
-// GPIO_D3
-#define LED_G     					GPIO_PD3
-#define PD3_FUNC					AS_GPIO
-#define PD3_OUTPUT_ENABLE			1
-#define PD3_INPUT_ENABLE			0
+// RELAY
+// NOT GPIO_PD2 GPIO_PD7
+// GPIO_PB4 ?
+#define RELAY1     					GPIO_PB4
+#define PB4_FUNC					AS_GPIO
+#define PB4_OUTPUT_ENABLE			1
+#define PB4_INPUT_ENABLE			0
 
+// GPIO_PB5 ?
+#define RELAY2     					GPIO_PB5
+#define PB5_FUNC					AS_GPIO
+#define PB5_OUTPUT_ENABLE			1
+#define PB5_INPUT_ENABLE			0
+
+#define RELAYS_PIN {RELAY1, RELAY2}
+
+// LED
 // GPIO_C0
-#define LED_R     					GPIO_PC0
+#define LED1     					GPIO_PC0
 #define PC0_FUNC					AS_GPIO
 #define PC0_OUTPUT_ENABLE			1
 #define PC0_INPUT_ENABLE			0
 
-#define LED_POWER					LED_R
-#define LED_PERMIT					LED_G
+// GPIO_D3
+#define LED2     					GPIO_PD3
+#define PD3_FUNC					AS_GPIO
+#define PD3_OUTPUT_ENABLE			1
+#define PD3_INPUT_ENABLE			0
 
-#define LED_ON						0//1
-#define LED_OFF						1//0
-#define HAVE_1_LED                  1
+#define LEDS_PIN                    {LED1, LED2}
 
-#define UART_ENABLE 1
+#define LED_POWER					LED1
+
+#define	PM_WAKEUP_LEVEL		  		PM_WAKEUP_LEVEL_LOW
+
+#define VOLTAGE_DETECT_PIN			GPIO_PC5
 
 // UART
 #if UART_ENABLE
@@ -75,17 +96,14 @@ extern "C" {
 	#define UART_PIN_CFG()			uart_gpio_set(UART_TX_PIN, UART_RX_PIN);// uart tx/rx pin set
 #endif
 
-#define UART_PRINTF_MODE 1
-// DEBUG
-#if UART_PRINTF_MODE
-	#define	DEBUG_INFO_TX_PIN	    GPIO_PC1//print
+// UART
+#if ZBHCI_UART
+	#error please configurate uart PIN!!!!!!
 #endif
 
-// USB
-#if ZBHCI_USB_PRINT || ZBHCI_USB_CDC || ZBHCI_USB_HID
-	#define HW_USB_CFG()			do{ \
-										usb_set_pin_en();	\
-									}while(0)
+// DEBUG
+#if UART_PRINTF_MODE
+	#define	DEBUG_INFO_TX_PIN	    GPIO_PB1//print
 #endif
 
 #if !defined(__ASSEMBLER__)
@@ -100,10 +118,8 @@ enum{
 #define	KB_MAP_NUM		KB_MAP_NORMAL
 #define	KB_MAP_FN		KB_MAP_NORMAL
 
-#define KB_DRIVE_PINS  {NULL }
-#define KB_SCAN_PINS   {BUTTON1,  BUTTON2}
-
-#define IMAGE_TYPE                          ((CHIP_TYPE << 8) | IMAGE_TYPE_BOOTLOADER) //0x03FF
+#define KB_DRIVE_PINS  {0}
+#define KB_SCAN_PINS   {BUTTON1, BUTTON2}
 
 /* Disable C linkage for C++ Compilers: */
 #if defined(__cplusplus)

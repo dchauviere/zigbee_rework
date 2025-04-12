@@ -10,6 +10,10 @@ project(dce_zigbee VERSION 0.1.0 LANGUAGES ASM C)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
+if(NOT DEFINED BOARD)
+    set(BOARD "TS0012")
+endif()
+
 ADD_SUBDIRECTORY(lib/cmake_timestamp timestamp)
 ADD_SUBDIRECTORY(bootloader)
 ADD_SUBDIRECTORY(switch)

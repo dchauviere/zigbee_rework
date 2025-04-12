@@ -33,11 +33,11 @@
 #include "zcl_include.h"
 #include "bdb.h"
 #include "ota.h"
-#include "sampleSwitch.h"
+#include "switchApp.h"
 #include "app_ui.h"
-#if ZBHCI_EN
-#include "zbhci.h"
-#endif
+#include "endpointCfg.h"
+#include "zclApp.h"
+#include "zb_appCb.h"
 
 
 /**********************************************************************
@@ -55,16 +55,13 @@
  */
 app_ctx_t g_switchAppCtx;
 
-#ifdef ZCL_OTA
-extern ota_callBack_t sampleSwitch_otaCb;
 
 //running code firmware information
-ota_preamble_t sampleSwitch_otaInfo = {
+ota_preamble_t switch_otaInfo = {
 	.fileVer 			= FILE_VERSION,
 	.imageType 			= IMAGE_TYPE,
 	.manufacturerCode 	= MANUFACTURER_CODE_TELINK,
 };
-#endif
 
 
 //Must declare the application call back function which used by ZDO layer
@@ -72,8 +69,8 @@ const zdo_appIndCb_t appCbLst = {
 	bdb_zdoStartDevCnf,//start device cnf cb
 	NULL,//reset cnf cb
 	NULL,//device announce indication cb
-	sampleSwitch_leaveIndHandler,//leave ind cb
-	sampleSwitch_leaveCnfHandler,//leave cnf cb
+	switch_leaveIndHandler,//leave ind cb
+	switch_leaveCnfHandler,//leave cnf cb
 	NULL,//nwk update ind cb
 	NULL,//permit join ind cb
 	NULL,//nlme sync cnf cb
@@ -117,21 +114,6 @@ bdb_commissionSetting_t g_bdbCommissionSetting = {
 	.touchlinkLqiThreshold = 0xA0,			   							/* threshold for touch-link scan req/resp command */
 };
 
-#if PM_ENABLE
-/**
- *  @brief Definition for wakeup source and level for PM
- */
-drv_pm_pinCfg_t g_switchPmCfg[] = {
-	{
-		BUTTON1,
-		PM_WAKEUP_LEVEL
-	},
-	{
-		BUTTON2,
-		PM_WAKEUP_LEVEL
-	}
-};
-#endif
 /**********************************************************************
  * LOCAL VARIABLES
  */
@@ -172,32 +154,25 @@ void stack_init(void)
  */
 void user_app_init(void)
 {
-#if ZCL_POLL_CTRL_SUPPORT
-	af_powerDescPowerModeUpdate(POWER_MODE_RECEIVER_COMES_PERIODICALLY);
-#else
 	af_powerDescPowerModeUpdate(POWER_MODE_RECEIVER_COMES_WHEN_STIMULATED);
-#endif
 
 	af_nodeDescManuCodeUpdate(MANUFACTURER_CODE_TELINK);
 
     /* Initialize ZCL layer */
 	/* Register Incoming ZCL Foundation command/response messages */
-	zcl_init(sampleSwitch_zclProcessIncomingMsg);
+	zcl_init(switch_zclProcessIncomingMsg);
 
 	/* register endPoint */
-	af_endpointRegister(SAMPLE_SWITCH_ENDPOINT, (af_simple_descriptor_t *)&sampleSwitch_simpleDesc, zcl_rx_handler, NULL);
-	af_endpointRegister(SAMPLE_SWITCH_ENDPOINT_2, (af_simple_descriptor_t *)&sampleSwitch_simpleDesc2, zcl_rx_handler, NULL);
+	registerAllEndpoints();
 
-	zcl_sampleSwitchAttrsInit();
+	zcl_onOffAttr_restore();
+
 	zcl_reportingTabInit();
 
 	/* Register ZCL specific cluster information */
-	zcl_register(SAMPLE_SWITCH_ENDPOINT, SAMPLE_SWITCH_CB_CLUSTER_NUM, (zcl_specClusterInfo_t *)g_sampleSwitchClusterList);
-	zcl_register(SAMPLE_SWITCH_ENDPOINT_2, SAMPLE_SWITCH_CB_CLUSTER_NUM_2, (zcl_specClusterInfo_t *)g_sampleSwitchClusterList2);
+	registerAllZCL();
 
-#if ZCL_OTA_SUPPORT
-    ota_init(OTA_TYPE_CLIENT, (af_simple_descriptor_t *)&sampleSwitch_simpleDesc, &sampleSwitch_otaInfo, &sampleSwitch_otaCb);
-#endif
+    ota_init(OTA_TYPE_CLIENT, (af_simple_descriptor_t *)&endpoint_simpleDesc, &switch_otaInfo, &switch_otaCb);
 }
 
 s32 sampleSwitchAttrsStoreTimerCb(void *arg)
@@ -237,25 +212,13 @@ void app_task(void)
 
 	if(bdb_isIdle()){
 		report_handler();
-#if PM_ENABLE
-		app_key_handler();
-		
-		if(!g_switchAppCtx.keyPressed){
-			drv_pm_lowPowerEnter();
-		}
-#endif
 	}
 }
 
 static void sampleSwitchSysException(void)
 {
 	zcl_onOffAttr_save();
-#if 1
 	SYSTEM_RESET();
-#else
-	light_on();
-	while(1);
-#endif
 }
 
 /*********************************************************************
@@ -272,18 +235,6 @@ void user_init(bool isRetention)
 	/* Initialize LEDs*/
 	led_init();
 
-#if PA_ENABLE
-	rf_paInit(PA_TX, PA_RX);
-#endif
-
-#if ZBHCI_EN
-	zbhciInit();
-#endif
-
-#if PM_ENABLE
-	drv_pm_wakeupPinConfig(g_switchPmCfg, sizeof(g_switchPmCfg)/sizeof(drv_pm_pinCfg_t));
-#endif
-
 	if(!isRetention){
 		/* Initialize Stack */
 		stack_init();
@@ -295,9 +246,6 @@ void user_init(bool isRetention)
 		sys_exceptHandlerRegister(sampleSwitchSysException);
 
 		/* User's Task */
-#if ZBHCI_EN
-		ev_on_poll(EV_POLL_HCI, zbhciTask);
-#endif
 		ev_on_poll(EV_POLL_IDLE, app_task);
 
 		/* Load the pre-install code from flash */
@@ -310,14 +258,14 @@ void user_init(bool isRetention)
 
 	    /* Set default reporting configuration */
     	u8 reportableChange = 0x00;
-    	bdb_defaultReportingCfg(SAMPLE_SWITCH_ENDPOINT, HA_PROFILE_ID, ZCL_CLUSTER_GEN_ON_OFF, ZCL_ATTRID_ONOFF,
+		for(u8 ep=1;ep<=BUTTON_NUM;ep++){
+			bdb_defaultReportingCfg(ep, HA_PROFILE_ID, ZCL_CLUSTER_GEN_ON_OFF, ZCL_ATTRID_ONOFF,
     						0x0000, 0x003c, (u8 *)&reportableChange);
-    	bdb_defaultReportingCfg(SAMPLE_SWITCH_ENDPOINT_2, HA_PROFILE_ID, ZCL_CLUSTER_GEN_ON_OFF, ZCL_ATTRID_ONOFF,
-    						0x0000, 0x003c, (u8 *)&reportableChange);
+		}
 
 		/* Initialize BDB */
 		u8 repower = drv_pm_deepSleep_flag_get() ? 0 : 1;
-		bdb_init((af_simple_descriptor_t *)&sampleSwitch_simpleDesc, &g_bdbCommissionSetting, &g_zbDemoBdbCb, repower);
+		bdb_init((af_simple_descriptor_t *)&endpoint_simpleDesc, &g_bdbCommissionSetting, &g_zbDemoBdbCb, repower);
 	}else{
 		/* Re-config phy when system recovery from deep sleep with retention */
 		mac_phyReconfig();

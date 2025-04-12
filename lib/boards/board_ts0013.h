@@ -32,7 +32,10 @@ extern "C" {
 
 #define HARDWARE_REV                0x01
 
-// BUTTON 
+// BUTTON
+
+#define BUTTON_NUM                  3
+
 // GPIO_PC4
 #define BUTTON1               		GPIO_PC4
 #define PC4_FUNC			  		AS_GPIO
@@ -47,19 +50,33 @@ extern "C" {
 #define PB6_INPUT_ENABLE	  		1
 #define	PULL_WAKEUP_SRC_PB6	  		PM_PIN_PULLUP_10K
 
+// GPIO_PD7 ?
+#define BUTTON3             		GPIO_PD7
+#define PD7_FUNC			  		AS_GPIO
+#define PD7_OUTPUT_ENABLE	  		0
+#define PD7_INPUT_ENABLE	  		1
+#define	PULL_WAKEUP_SRC_PD7	  		PM_PIN_PULLUP_10K
+
 // RELAY
-// NOT GPIO_PD2 GPIO_PD7
-// GPIO_PB4 ?
+// GPIO_PB4
 #define RELAY1     					GPIO_PB4
 #define PB4_FUNC					AS_GPIO
 #define PB4_OUTPUT_ENABLE			1
 #define PB4_INPUT_ENABLE			0
 
-// GPIO_PB5 ?
+// GPIO_PB5
 #define RELAY2     					GPIO_PB5
 #define PB5_FUNC					AS_GPIO
 #define PB5_OUTPUT_ENABLE			1
 #define PB5_INPUT_ENABLE			0
+
+// GPIO_PD2
+#define RELAY3     					GPIO_PD2
+#define PD2_FUNC					AS_GPIO
+#define PD2_OUTPUT_ENABLE			1
+#define PD2_INPUT_ENABLE			0
+
+#define RELAYS_PIN {RELAY1, RELAY2, RELAY3}
 
 // LED
 // GPIO_C0
@@ -74,6 +91,7 @@ extern "C" {
 #define PD3_OUTPUT_ENABLE			1
 #define PD3_INPUT_ENABLE			0
 
+#define LEDS_PIN                    {LED1, LED2}
 
 #define LED_POWER					LED1
 
@@ -94,17 +112,18 @@ extern "C" {
 #if !defined(__ASSEMBLER__)
 enum{
 	VK_SW1 = 0x01,
-	VK_SW2 = 0x02
+	VK_SW2 = 0x02,
+	VK_SW3 = 0x03
 };
 #endif
 
-#define	KB_MAP_NORMAL	{{VK_SW1,},{VK_SW2,},}
+#define	KB_MAP_NORMAL	{{VK_SW1,},{VK_SW2,},{VK_SW3,},}
 
 #define	KB_MAP_NUM		KB_MAP_NORMAL
 #define	KB_MAP_FN		KB_MAP_NORMAL
 
 #define KB_DRIVE_PINS  {0}
-#define KB_SCAN_PINS   {BUTTON1,  BUTTON2}
+#define KB_SCAN_PINS   {BUTTON1, BUTTON2, BUTTON3}
 
 /* Disable C linkage for C++ Compilers: */
 #if defined(__cplusplus)

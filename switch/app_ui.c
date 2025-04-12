@@ -32,8 +32,9 @@
 #include "zb_api.h"
 #include "zcl_include.h"
 #include "bdb.h"
-#include "sampleSwitch.h"
-#include "sampleSwitchCtrl.h"
+#include "endpointCfg.h"
+#include "switchApp.h"
+#include "switchCtrl.h"
 #include "app_ui.h"
 
 /**********************************************************************
@@ -160,12 +161,12 @@ void app_processToggle(u8 btn) {
 	dstEpInfo.dstAddr.shortAddr = 0xfffc;
 #endif
 	zcl_onOff_toggleCmd(btn, &dstEpInfo, FALSE);
-	sampleSwitch_onOffUpdate(btn, ZCL_CMD_ONOFF_TOGGLE);
+	switch_onOffUpdate(btn, ZCL_CMD_ONOFF_TOGGLE);
 }
 
 void app_processDblClick(u8 btn) {
 	zcl_onOffAttr_t *onOffAttr = zcl_onoffAttrGet(btn-1);
-	sampleSwitch_onOffUpdate(btn, ZCL_CMD_ONOFF_TOGGLE);
+	switch_onOffUpdate(btn, ZCL_CMD_ONOFF_TOGGLE);
 }
 
 void app_processHold(u8 btn) {
