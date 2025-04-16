@@ -1,6 +1,6 @@
 ################################
 # Common settings
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.25)
 
 #PROJECT(bootloader LANGUAGES C ASM)
 
@@ -13,6 +13,7 @@ add_compile_definitions(
     MCU_STARTUP_${TELINK_PLATFORM}=1
     __PROJECT_TL_BOOT_LOADER__=1
     BUILD_BOOTLOADER=1
+    BOARD_${BOARD}=1
 )
 
 ################################
@@ -102,7 +103,7 @@ file( GLOB SOURCES1 *.c *.cpp *.h *.S common/*.c common/*.h )
 SET (SOURCES  ${SOURCES1} ${ZIGBEE_SRC})
 
 ADD_EXECUTABLE(${TARGET}_${BOARD} ${SOURCES})
-target_compile_definitions(${TARGET}_${BOARD} PRIVATE BUILD_${BOARD}=1)
+target_compile_definitions(${TARGET}_${BOARD} PRIVATE BOARD_${BOARD}=1)
 TARGET_LINK_LIBRARIES(${TARGET}_${BOARD}
         -Wl,--start-group
 	   drivers_${TELINK_PLATFORM}

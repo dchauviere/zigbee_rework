@@ -26,9 +26,10 @@
 #pragma once
 
 #include "../lib/common/comm_cfg.h"
+#include "../lib/boards/boards.h"
 
 
-#define APP_RELEASE							0x20//app release 1.0
+#define APP_RELEASE							0x01//app release 1.0
 #define APP_BUILD							0x02//app build 01
 #define STACK_RELEASE						0x30//stack release 3.0
 #define STACK_BUILD							0x01//stack build 01
@@ -39,7 +40,7 @@
  */
 
 #define MANUFACTURER_CODE_TELINK           	0x1141//Telink ID
-#define	IMAGE_TYPE							((CHIP_TYPE << 8) | IMAGE_TYPE_SWITCH)
+#define	IMAGE_TYPE							((CHIP_TYPE << 8) | DEVICE_TYPE)
 #define	FILE_VERSION					  	((APP_RELEASE << 24) | (APP_BUILD << 16) | (STACK_RELEASE << 8) | STACK_BUILD)
 
 //#define	IMAGE_TYPE							((CHIP_TYPE << 8) | IMAGE_TYPE_SWITCH_0041) //0x3a1
@@ -49,19 +50,12 @@
 #define RESV_FOR_APP_RAM_CODE_SIZE			0
 #define IMAGE_OFFSET						APP_IMAGE_ADDR
 
-#ifndef ZCL_BASIC_MFG_NAME
-#define ZCL_BASIC_MFG_NAME     {4,'M','o','e','s'}
-#endif
-#ifndef ZCL_BASIC_MODEL_ID
-#define ZCL_BASIC_MODEL_ID	   {7,'Z','S','-','E','U','B', BUTTON_NUM + 0x30}
-#endif
-
 #ifndef ZCL_BASIC_SW_BUILD_ID //max 16 chars
-	#define ZCL_BASIC_SW_BUILD_ID       {9,'1','.','0','.','0','-','D','C','E'}
+	#define ZCL_BASIC_SW_BUILD_ID       {9,'0','.','1','.','1','-','D','C','E'}
 #endif
 
 #ifndef ZCL_BASIC_DATE_CODE
-	#define ZCL_BASIC_DATE_CODE  {8,'2','0','2','5','0','4','1','2'}
+	#define ZCL_BASIC_DATE_CODE  {8,'2','0','2','5','0','4','1','5'}
 #endif
 
 /*
@@ -71,4 +65,3 @@
 
 #define UART_PRINTF_MODE 				0
 
-#include "../lib/boards/boards.h"

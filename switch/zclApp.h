@@ -52,5 +52,13 @@ status_t switch_onOffCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPay
 void switch_onoff(u8 cmd);
 void switch_onOffUpdate(u8 btn, u8 cmd);
 nv_sts_t zcl_onOffAttr_save(void);
+nv_sts_t zcl_onOffAttr_restore(void);
+
+// OnOffSwitchConfig
+
+status_t zcl_onOffSwitchCfg_register(u8 endpoint, u16 manuCode, u8 attrNum, const zclAttrInfo_t attrTbl[], cluster_forAppCb_t cb);
+status_t switch_onOffSwitchCfgCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPayload);
+nv_sts_t zcl_onOffSwitchCfgAttr_save(void);
+nv_sts_t zcl_onOffSwitchCfgAttr_restore(void);
 
 #endif

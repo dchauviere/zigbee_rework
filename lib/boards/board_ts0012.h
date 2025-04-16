@@ -30,8 +30,16 @@
 extern "C" {
 #endif
 
+#ifndef ZCL_BASIC_MFG_NAME
+#define ZCL_BASIC_MFG_NAME     {4,'M','o','e','s'}
+#endif
+#ifndef ZCL_BASIC_MODEL_ID
+#define ZCL_BASIC_MODEL_ID	   {7,'Z','S','-','E','U','B', '2'}
+#endif
+
 #define HARDWARE_REV                0x01
 #define CHIP_TYPE					TLSR_8258_1M
+#define DEVICE_TYPE					IMAGE_TYPE_SWITCH_TS0012
 
 // BUTTON
 
@@ -89,12 +97,10 @@ extern "C" {
 #define VOLTAGE_DETECT_PIN			GPIO_PC5
 
 // UART
-#if UART_ENABLE
-	#define UART_TX_PIN         	UART_TX_PB1
-	#define UART_RX_PIN         	UART_RX_PB7
+#define UART_TX_PIN         	UART_TX_PB1
+#define UART_RX_PIN         	UART_RX_PB7
 
-	#define UART_PIN_CFG()			uart_gpio_set(UART_TX_PIN, UART_RX_PIN);// uart tx/rx pin set
-#endif
+#define UART_PIN_CFG()			uart_gpio_set(UART_TX_PIN, UART_RX_PIN);// uart tx/rx pin set
 
 // UART
 #if ZBHCI_UART
@@ -102,9 +108,7 @@ extern "C" {
 #endif
 
 // DEBUG
-#if UART_PRINTF_MODE
-	#define	DEBUG_INFO_TX_PIN	    GPIO_PB1//print
-#endif
+#define	DEBUG_INFO_TX_PIN	    GPIO_PB1//print
 
 #if !defined(__ASSEMBLER__)
 enum{

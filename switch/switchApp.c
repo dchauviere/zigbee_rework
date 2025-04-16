@@ -166,6 +166,7 @@ void user_app_init(void)
 	registerAllEndpoints();
 
 	zcl_onOffAttr_restore();
+	zcl_onOffSwitchCfgAttr_restore();
 
 	zcl_reportingTabInit();
 
@@ -178,6 +179,7 @@ void user_app_init(void)
 s32 sampleSwitchAttrsStoreTimerCb(void *arg)
 {
 	zcl_onOffAttr_save();
+	zcl_onOffSwitchCfgAttr_save();
 
 	sampleSwitchAttrsStoreTimerEvt = NULL;
 	return -1;

@@ -35,6 +35,7 @@
 #include "endpointCfg.h"
 #include "switchApp.h"
 #include "switchCtrl.h"
+#include "zclApp.h"
 #include "app_ui.h"
 
 /**********************************************************************
@@ -148,6 +149,44 @@ void set_detect_voltage(s32 v){
     g_switchAppCtx.Vbat = v;
 }
 
+void app_processMomentary(u8 btn, bool released) {
+	epInfo_t dstEpInfo;
+	TL_SETSTRUCTCONTENT(dstEpInfo, 0);
+
+	dstEpInfo.profileId = HA_PROFILE_ID;
+#if FIND_AND_BIND_SUPPORT
+	dstEpInfo.dstAddrMode = APS_DSTADDR_EP_NOTPRESETNT;
+#else
+	dstEpInfo.dstAddrMode = APS_SHORT_DSTADDR_WITHEP;
+	dstEpInfo.dstEp = btn;
+	dstEpInfo.dstAddr.shortAddr = 0xfffc;
+#endif
+	switch(g_zcl_onOffSwitchCfgAttrs[btn].switchAction){
+		case ZCL_SWITCH_ACTION_ON_OFF:
+			if (released) {
+				switch_onOffUpdate(btn, ZCL_CMD_ONOFF_OFF);
+				zcl_onOff_offCmd(btn, &dstEpInfo, FALSE);
+			} else {
+				switch_onOffUpdate(btn, ZCL_CMD_ONOFF_ON);
+				zcl_onOff_onCmd(btn, &dstEpInfo, FALSE);
+			}
+			break;
+		case ZCL_SWITCH_ACTION_OFF_ON:
+			if (released) {
+				switch_onOffUpdate(btn, ZCL_CMD_ONOFF_ON);
+				zcl_onOff_onCmd(btn, &dstEpInfo, FALSE);
+			} else {
+				switch_onOffUpdate(btn, ZCL_CMD_ONOFF_OFF);
+				zcl_onOff_offCmd(btn, &dstEpInfo, FALSE);
+			}
+			break;
+		case ZCL_SWITCH_ACTION_TOGGLE:
+			switch_onOffUpdate(btn, ZCL_CMD_ONOFF_TOGGLE);
+			zcl_onOff_toggleCmd(btn, &dstEpInfo, FALSE);
+			break;
+	}
+}
+
 void app_processToggle(u8 btn) {
 	epInfo_t dstEpInfo;
 	TL_SETSTRUCTCONTENT(dstEpInfo, 0);
@@ -160,13 +199,13 @@ void app_processToggle(u8 btn) {
 	dstEpInfo.dstEp = btn;
 	dstEpInfo.dstAddr.shortAddr = 0xfffc;
 #endif
-	zcl_onOff_toggleCmd(btn, &dstEpInfo, FALSE);
 	switch_onOffUpdate(btn, ZCL_CMD_ONOFF_TOGGLE);
+	zcl_onOff_toggleCmd(btn, &dstEpInfo, FALSE);
 }
 
 void app_processDblClick(u8 btn) {
 	zcl_onOffAttr_t *onOffAttr = zcl_onoffAttrGet(btn-1);
-	switch_onOffUpdate(btn, ZCL_CMD_ONOFF_TOGGLE);
+	switch_refresh(btn, SWITCH_STA_ON_OFF);
 }
 
 void app_processHold(u8 btn) {
@@ -253,14 +292,19 @@ void app_key_handler(void){
 	}
 
 	if(kb_scan_key(0, 1)){
-		if(kb_event.cnt){
+		if(kb_event.cnt == 1){
 			// Key Pressed
 			printf("key pressed\n");
+			valid_keyCode = kb_event.keycode[0];
 			keyPressed = 1;
-			g_switchAppCtx.state = APP_STATE_WAIT_KEY_MODE;
 			g_switchAppCtx.keyPressedTime = clock_time();
-			if(kb_event.cnt == 1){
-				valid_keyCode = kb_event.keycode[0];
+			if (g_zcl_onOffSwitchCfgAttrs[valid_keyCode].switchType == ZCL_SWITCH_TYPE_MOMENTARY) {
+				app_processMomentary(valid_keyCode, false);
+				g_switchAppCtx.state = APP_STATE_WAIT_ACTION_END;
+			} else if (g_zcl_onOffSwitchCfgAttrs[valid_keyCode].switchType == ZCL_SWITCH_TYPE_TOGGLE) {
+				g_switchAppCtx.state = APP_STATE_WAIT_ACTION_END;
+			} else {
+				g_switchAppCtx.state = APP_STATE_WAIT_KEY_MODE;
 			}
 		}else{
 			// Key Released
@@ -270,6 +314,12 @@ void app_key_handler(void){
 				nbClicks++;
 				g_switchAppCtx.actionTime = clock_time();
 				g_switchAppCtx.state = APP_STATE_ACTION_CLICKS;
+			} else if (g_switchAppCtx.state == APP_STATE_WAIT_ACTION_END) {
+				if (clock_time_exceed(g_switchAppCtx.actionTime, 500*1000)) {
+					app_processMomentary(valid_keyCode, true);
+				}
+				valid_keyCode = 0xff;
+				g_switchAppCtx.state = APP_STATE_IDLE;
 			} else {
 				valid_keyCode = 0xff;
 				g_switchAppCtx.state = APP_STATE_IDLE;

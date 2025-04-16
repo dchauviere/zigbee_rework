@@ -30,8 +30,16 @@
 extern "C" {
 #endif
 
-#define HARDWARE_REV                0x01
+#ifndef ZCL_BASIC_MFG_NAME
+#define ZCL_BASIC_MFG_NAME     {4,'M','o','e','s'}
+#endif
+#ifndef ZCL_BASIC_MODEL_ID
+#define ZCL_BASIC_MODEL_ID	   {7,'Z','S','-','E','U','B', '3'}
+#endif
 
+#define HARDWARE_REV                0x01
+#define CHIP_TYPE					TLSR_8258_1M
+#define DEVICE_TYPE					IMAGE_TYPE_SWITCH_TS0013
 // BUTTON
 
 #define BUTTON_NUM                  3
@@ -51,11 +59,11 @@ extern "C" {
 #define	PULL_WAKEUP_SRC_PB6	  		PM_PIN_PULLUP_10K
 
 // GPIO_PD7 ?
-#define BUTTON3             		GPIO_PD7
-#define PD7_FUNC			  		AS_GPIO
-#define PD7_OUTPUT_ENABLE	  		0
-#define PD7_INPUT_ENABLE	  		1
-#define	PULL_WAKEUP_SRC_PD7	  		PM_PIN_PULLUP_10K
+#define BUTTON3             		GPIO_PC1
+#define PC1_FUNC			  		AS_GPIO
+#define PC1_OUTPUT_ENABLE	  		0
+#define PC1_INPUT_ENABLE	  		1
+#define	PULL_WAKEUP_SRC_PC1	  		PM_PIN_PULLUP_10K
 
 // RELAY
 // GPIO_PB4
@@ -91,7 +99,13 @@ extern "C" {
 #define PD3_OUTPUT_ENABLE			1
 #define PD3_INPUT_ENABLE			0
 
-#define LEDS_PIN                    {LED1, LED2}
+// GPIO_?
+#define LED3     					GPIO_PD7
+#define PD7_FUNC					AS_GPIO
+#define PD7_OUTPUT_ENABLE			1
+#define PD7_INPUT_ENABLE			0
+
+#define LEDS_PIN                    {LED1, LED2, LED3}
 
 #define LED_POWER					LED1
 
@@ -100,14 +114,18 @@ extern "C" {
 #define VOLTAGE_DETECT_PIN			GPIO_PC5
 
 // UART
+#define UART_TX_PIN         	UART_TX_PB1
+#define UART_RX_PIN         	UART_RX_PB7
+
+#define UART_PIN_CFG()			uart_gpio_set(UART_TX_PIN, UART_RX_PIN);// uart tx/rx pin set
+
+// UART
 #if ZBHCI_UART
 	#error please configurate uart PIN!!!!!!
 #endif
 
 // DEBUG
-#if UART_PRINTF_MODE
-	#define	DEBUG_INFO_TX_PIN	    GPIO_PB1//print
-#endif
+#define	DEBUG_INFO_TX_PIN	    GPIO_PB1//print
 
 #if !defined(__ASSEMBLER__)
 enum{

@@ -4,11 +4,16 @@ cmake_minimum_required(VERSION 3.25)
 
 SET(TARGET switch)
 
+if(NOT DEFINED BOARD)
+    set(BOARD "TS0012")
+endif()
+
 ADD_DEFINITIONS(
     -DROUTER=1
     -DMCU_CORE_${TELINK_PLATFORM}=1
     -DMCU_STARTUP_${TELINK_PLATFORM}=1
     -D__PROJECT_TL_SWITCH__=1
+    -DBOARD_${BOARD}=1
 )
 
 ################################

@@ -1,12 +1,9 @@
 /* Board ID */
-#define BOARD_8258_TS0012               0
-#define BOARD_8258_TS0013               1
-
 
 /* Board include */
-#if (BOARD == BOARD_TS0012)
+#if (BOARD_TS0012)
 	#include "../boards/board_ts0012.h"
-#elif (BOARD == BOARD_TS0013)
+#elif (BOARD_TS0013)
 	#include "../boards/board_ts0013.h"
 #endif
 

@@ -59,6 +59,7 @@ const u16 endpoint_inClusterList[] =
 	ZCL_CLUSTER_GEN_GROUPS,
 	ZCL_CLUSTER_GEN_SCENES,
 	ZCL_CLUSTER_GEN_ON_OFF,
+	ZCL_CLUSTER_GEN_ON_OFF_SWITCH_CONFIG,
 };
 
 /**
@@ -76,6 +77,7 @@ const u16 endpoint_outClusterList[] =
 const u16 extra_Endpoint_inClusterList[] =
 {
 	ZCL_CLUSTER_GEN_ON_OFF,
+	ZCL_CLUSTER_GEN_ON_OFF_SWITCH_CONFIG,
 };
 
 const u16 extra_Endpoint_outClusterList[] =
@@ -208,6 +210,16 @@ const zclAttrInfo_t onOff_attrTbl[] = get_onOff_attrTbl(0);
 
 #define ZCL_ONOFF_ATTR_NUM	 sizeof(onOff_attrTbl) / sizeof(zclAttrInfo_t)
 
+/* On/Off Configuration */
+#define get_onOffSwitchCfg_attrTbl(x) { \
+	{ ZCL_ATTRID_SWITCH_TYPE, ZCL_DATA_TYPE_ENUM8, ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, (u8*)&g_zcl_onOffSwitchCfgAttrs[x].switchType}, \
+	{ ZCL_ATTRID_SWITCH_ACTION, ZCL_DATA_TYPE_ENUM8, ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, (u8*)&g_zcl_onOffSwitchCfgAttrs[x].switchAction}, \
+}
+
+const zclAttrInfo_t onOffSwitchCfg_attrTbl[] = get_onOffSwitchCfg_attrTbl(0);
+
+#define ZCL_ONOFFSWITCHCFG_ATTR_NUM	 sizeof(onOffSwitchCfg_attrTbl) / sizeof(zclAttrInfo_t)
+
 /**
  *  @brief Definition for simple switch ZCL specific cluster
  */
@@ -218,6 +230,7 @@ const zcl_specClusterInfo_t endpointSpecClusterInfo[] =
 	{ZCL_CLUSTER_GEN_GROUPS,		MANUFACTURER_CODE_NONE,	0, 						NULL,  				zcl_group_register,		switch_groupCb},
 	{ZCL_CLUSTER_GEN_SCENES,		MANUFACTURER_CODE_NONE,	0,						NULL,				zcl_scene_register,		switch_sceneCb},
 	{ZCL_CLUSTER_GEN_ON_OFF,		MANUFACTURER_CODE_NONE, ZCL_ONOFF_ATTR_NUM,		onOff_attrTbl,		zcl_onOff_register,		switch_onOffCb},
+	{ZCL_CLUSTER_GEN_ON_OFF_SWITCH_CONFIG,		MANUFACTURER_CODE_NONE, ZCL_ONOFFSWITCHCFG_ATTR_NUM,		onOffSwitchCfg_attrTbl,		zcl_onOffSwitchCfg_register,		switch_onOffSwitchCfgCb},
 };
 
 u8 ENDPOINT_CB_CLUSTER_NUM = (sizeof(endpointSpecClusterInfo)/sizeof(endpointSpecClusterInfo[0]));
@@ -236,10 +249,12 @@ const af_simple_descriptor_t endpoint2_simpleDesc =
     (u16 *)extra_Endpoint_outClusterList,
 };
 const zclAttrInfo_t onOff_2_attrTbl[] = get_onOff_attrTbl(1);
+const zclAttrInfo_t onOffSwitchCfg_2_attrTbl[] = get_onOffSwitchCfg_attrTbl(1);
 #define ZCL_ONOFF_2_ATTR_NUM	 sizeof(onOff_2_attrTbl) / sizeof(zclAttrInfo_t)
 const zcl_specClusterInfo_t endpoint2SpecClusterInfo[] =
 {
 	{ZCL_CLUSTER_GEN_ON_OFF,		MANUFACTURER_CODE_NONE, ZCL_ONOFF_2_ATTR_NUM,		onOff_2_attrTbl,		zcl_onOff_register,		switch_onOffCb},
+	{ZCL_CLUSTER_GEN_ON_OFF_SWITCH_CONFIG,		MANUFACTURER_CODE_NONE, ZCL_ONOFFSWITCHCFG_ATTR_NUM,		onOffSwitchCfg_2_attrTbl,		zcl_onOffSwitchCfg_register,		switch_onOffSwitchCfgCb},
 };
 u8 ENDPOINT_2_CB_CLUSTER_NUM = (sizeof(endpoint2SpecClusterInfo)/sizeof(endpoint2SpecClusterInfo[0]));
 #endif
@@ -250,6 +265,7 @@ const af_simple_descriptor_t endpoint3_simpleDesc =
     HA_PROFILE_ID,
     HA_DEV_ONOFF_SWITCH,
     ENDPOINT_3,
+	2,
     0,
     EXTRA_ENDPOINT_IN_CLUSTER_NUM,
     EXTRA_ENDPOINT_OUT_CLUSTER_NUM,
@@ -258,9 +274,11 @@ const af_simple_descriptor_t endpoint3_simpleDesc =
 };
 const zclAttrInfo_t onOff_3_attrTbl[] = get_onOff_attrTbl(2);
 #define ZCL_ONOFF_3_ATTR_NUM	 sizeof(onOff_3_attrTbl) / sizeof(zclAttrInfo_t)
+const zclAttrInfo_t onOffSwitchCfg_3_attrTbl[] = get_onOffSwitchCfg_attrTbl(2);
 const zcl_specClusterInfo_t endpoint3SpecClusterInfo[] =
 {
 	{ZCL_CLUSTER_GEN_ON_OFF,		MANUFACTURER_CODE_NONE, ZCL_ONOFF_3_ATTR_NUM,		onOff_3_attrTbl,		zcl_onOff_register,		switch_onOffCb},
+	{ZCL_CLUSTER_GEN_ON_OFF_SWITCH_CONFIG,		MANUFACTURER_CODE_NONE, ZCL_ONOFFSWITCHCFG_ATTR_NUM,		onOffSwitchCfg_3_attrTbl,		zcl_onOffSwitchCfg_register,		switch_onOffSwitchCfgCb},
 };
 u8 ENDPOINT_3_CB_CLUSTER_NUM = (sizeof(endpoint3SpecClusterInfo)/sizeof(endpoint3SpecClusterInfo[0]));
 #endif
