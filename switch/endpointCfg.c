@@ -33,6 +33,7 @@
 #include "version_cfg.h"
 #include "endpointCfg.h"
 #include "zclApp.h"
+#include "switchApp.h"
 
 /**********************************************************************
  * LOCAL CONSTANTS
@@ -197,12 +198,17 @@ const zclAttrInfo_t scene_attrTbl[] =
 #define ZCL_SCENE_ATTR_NUM	 sizeof(scene_attrTbl) / sizeof(zclAttrInfo_t)
 
 /* On/Off */
+#define ZCL_ATTRID_ON_SWITCH_TRIGGER						  0x4100
+#define ZCL_ATTRID_BACKLIGHT_MODE   						  0x4101
+
 #define get_onOff_attrTbl(x) { \
-	{ ZCL_ATTRID_ONOFF,  					ZCL_DATA_TYPE_BOOLEAN,  ACCESS_CONTROL_READ | ACCESS_CONTROL_REPORTABLE,  (u8*)&g_zcl_onOffAttrs[x].onOff}, \
-	{ ZCL_ATTRID_GLOBAL_SCENE_CONTROL, 		ZCL_DATA_TYPE_BOOLEAN, 	ACCESS_CONTROL_READ, 							  (u8*)&g_zcl_onOffAttrs[x].globalSceneControl}, \
-	{ ZCL_ATTRID_ON_TIME, 					ZCL_DATA_TYPE_UINT16, 	ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, 	  (u8*)&g_zcl_onOffAttrs[x].onTime}, \
-	{ ZCL_ATTRID_OFF_WAIT_TIME, 			ZCL_DATA_TYPE_UINT16, 	ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, 	  (u8*)&g_zcl_onOffAttrs[x].offWaitTime}, \
-	{ ZCL_ATTRID_START_UP_ONOFF, 			ZCL_DATA_TYPE_ENUM8, 	ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, 	  (u8*)&g_zcl_onOffAttrs[x].startUpOnOff}, \
+	{ ZCL_ATTRID_ONOFF,  					ZCL_DATA_TYPE_BOOLEAN,  ACCESS_CONTROL_READ | ACCESS_CONTROL_REPORTABLE,  (u8*)&g_switchAppCtx.relayAttrs[x].onOff}, \
+	{ ZCL_ATTRID_GLOBAL_SCENE_CONTROL, 		ZCL_DATA_TYPE_BOOLEAN, 	ACCESS_CONTROL_READ, 							  (u8*)&g_switchAppCtx.relayAttrs[x].globalSceneControl}, \
+	{ ZCL_ATTRID_ON_TIME, 					ZCL_DATA_TYPE_UINT16, 	ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, 	  (u8*)&g_switchAppCtx.relayAttrs[x].onTime}, \
+	{ ZCL_ATTRID_OFF_WAIT_TIME, 			ZCL_DATA_TYPE_UINT16, 	ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, 	  (u8*)&g_switchAppCtx.relayAttrs[x].offWaitTime}, \
+	{ ZCL_ATTRID_START_UP_ONOFF, 			ZCL_DATA_TYPE_ENUM8, 	ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, 	  (u8*)&g_switchAppCtx.relayAttrs[x].startUpOnOff}, \
+	{ ZCL_ATTRID_ON_SWITCH_TRIGGER, 		ZCL_DATA_TYPE_ENUM8, 	ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, 	  (u8*)&g_switchAppCtx.relayAttrs[x].onSwitchTrigger}, \
+	{ ZCL_ATTRID_BACKLIGHT_MODE, 		    ZCL_DATA_TYPE_ENUM8, 	ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, 	  (u8*)&g_switchAppCtx.relayAttrs[x].backlightMode}, \
 	{ ZCL_ATTRID_GLOBAL_CLUSTER_REVISION, 	ZCL_DATA_TYPE_UINT16,  	ACCESS_CONTROL_READ,  							  (u8*)&zcl_attr_global_clusterRevision}, \
 }
 
@@ -210,10 +216,19 @@ const zclAttrInfo_t onOff_attrTbl[] = get_onOff_attrTbl(0);
 
 #define ZCL_ONOFF_ATTR_NUM	 sizeof(onOff_attrTbl) / sizeof(zclAttrInfo_t)
 
+
 /* On/Off Configuration */
+#define ZCL_SWITCH_MODE_TOGGLE                  0x00
+#define ZCL_SWITCH_MODE_MOMENTARY               0x01
+#define ZCL_SWITCH_MODE_MULTIFUNCTION           0x02
+
+#define ZCL_ATTRID_SWITCH_MODE					0x4000
+#define ZCL_ATTRID_SWITCH_MODE					0x4000
+
 #define get_onOffSwitchCfg_attrTbl(x) { \
-	{ ZCL_ATTRID_SWITCH_TYPE, ZCL_DATA_TYPE_ENUM8, ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, (u8*)&g_zcl_onOffSwitchCfgAttrs[x].switchType}, \
-	{ ZCL_ATTRID_SWITCH_ACTION, ZCL_DATA_TYPE_ENUM8, ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, (u8*)&g_zcl_onOffSwitchCfgAttrs[x].switchAction}, \
+	{ ZCL_ATTRID_SWITCH_MODE, ZCL_DATA_TYPE_ENUM8, ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, (u8*)&g_switchAppCtx.relayCfgAttrs[x].switchMode}, \
+	{ ZCL_ATTRID_SWITCH_ACTION, ZCL_DATA_TYPE_ENUM8, ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, (u8*)&g_switchAppCtx.relayCfgAttrs[x].switchAction}, \
+	{ ZCL_ATTRID_GLOBAL_CLUSTER_REVISION, 	ZCL_DATA_TYPE_UINT16,  	ACCESS_CONTROL_READ,  							  (u8*)&zcl_attr_global_clusterRevision}, \
 }
 
 const zclAttrInfo_t onOffSwitchCfg_attrTbl[] = get_onOffSwitchCfg_attrTbl(0);
@@ -229,8 +244,8 @@ const zcl_specClusterInfo_t endpointSpecClusterInfo[] =
 	{ZCL_CLUSTER_GEN_IDENTIFY,		MANUFACTURER_CODE_NONE,	ZCL_IDENTIFY_ATTR_NUM,	identify_attrTbl,	zcl_identify_register,	switch_identifyCb},
 	{ZCL_CLUSTER_GEN_GROUPS,		MANUFACTURER_CODE_NONE,	0, 						NULL,  				zcl_group_register,		switch_groupCb},
 	{ZCL_CLUSTER_GEN_SCENES,		MANUFACTURER_CODE_NONE,	0,						NULL,				zcl_scene_register,		switch_sceneCb},
-	{ZCL_CLUSTER_GEN_ON_OFF,		MANUFACTURER_CODE_NONE, ZCL_ONOFF_ATTR_NUM,		onOff_attrTbl,		zcl_onOff_register,		switch_onOffCb},
-	{ZCL_CLUSTER_GEN_ON_OFF_SWITCH_CONFIG,		MANUFACTURER_CODE_NONE, ZCL_ONOFFSWITCHCFG_ATTR_NUM,		onOffSwitchCfg_attrTbl,		zcl_onOffSwitchCfg_register,		switch_onOffSwitchCfgCb},
+	{ZCL_CLUSTER_GEN_ON_OFF,		MANUFACTURER_CODE_TELINK, ZCL_ONOFF_ATTR_NUM,		onOff_attrTbl,		zcl_onOff_register,		switch_onOffCb},
+	{ZCL_CLUSTER_GEN_ON_OFF_SWITCH_CONFIG,		MANUFACTURER_CODE_TELINK, ZCL_ONOFFSWITCHCFG_ATTR_NUM,		onOffSwitchCfg_attrTbl,		zcl_onOffSwitchCfg_register,		switch_onOffSwitchCfgCb},
 };
 
 u8 ENDPOINT_CB_CLUSTER_NUM = (sizeof(endpointSpecClusterInfo)/sizeof(endpointSpecClusterInfo[0]));

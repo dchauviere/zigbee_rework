@@ -34,6 +34,7 @@
 #include "zcl_include.h"
 #include "endpointCfg.h"
 #include "zclApp.h"
+#include "switchApp.h"
 
 
 /*********************************************************************
@@ -46,7 +47,7 @@
  *
  * @return  None
  */
-static void switch_sceneRecallReqHandler(u8 btn, zclIncomingAddrInfo_t *pAddrInfo, zcl_sceneEntry_t *pScene)
+static void switch_sceneRecallReqHandler(zclIncomingAddrInfo_t *pAddrInfo, zcl_sceneEntry_t *pScene)
 {
 	u8 *pData = pScene->extField;
 	u16 clusterID = 0xFFFF;
@@ -80,11 +81,11 @@ static void switch_sceneRecallReqHandler(u8 btn, zclIncomingAddrInfo_t *pAddrInf
  *
  * @return  None
  */
-static void switch_sceneStoreReqHandler(u8 btn, zcl_sceneEntry_t *pScene)
+static void switch_sceneStoreReqHandler(u8 relay, zcl_sceneEntry_t *pScene)
 {
 	u8 extLen = 0;
 
-	zcl_onOffAttr_t *pOnOff = zcl_onoffAttrGet(btn-1);
+	zcl_onOffAttr_t *pOnOff = &g_switchAppCtx.relayAttrs[relay];
 
 	pScene->extField[extLen++] = LO_UINT16(ZCL_CLUSTER_GEN_ON_OFF);
 	pScene->extField[extLen++] = HI_UINT16(ZCL_CLUSTER_GEN_ON_OFF);
@@ -108,13 +109,14 @@ status_t switch_sceneCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPay
 	status_t status = ZCL_STA_SUCCESS;
 
 	if(pAddrInfo->dstEp <= BUTTON_NUM){
+		u8 relay = pAddrInfo->dstEp - 1;
 		if(pAddrInfo->dirCluster == ZCL_FRAME_CLIENT_SERVER_DIR){
 			switch(cmdId){
 				case ZCL_CMD_SCENE_STORE_SCENE:
-					switch_sceneStoreReqHandler(pAddrInfo->dstEp, (zcl_sceneEntry_t *)cmdPayload);
+					switch_sceneStoreReqHandler(relay, (zcl_sceneEntry_t *)cmdPayload);
 					break;
 				case ZCL_CMD_SCENE_RECALL_SCENE:
-					switch_sceneRecallReqHandler(pAddrInfo->dstEp, pAddrInfo, (zcl_sceneEntry_t *)cmdPayload);
+					switch_sceneRecallReqHandler(pAddrInfo, (zcl_sceneEntry_t *)cmdPayload);
 					break;
 				default:
 					status = ZCL_STA_UNSUP_MANU_CLUSTER_COMMAND;

@@ -33,11 +33,13 @@
 #include "zcl_include.h"
 #include "bdb.h"
 #include "ota.h"
+#include "zclApp.h"
 #include "switchApp.h"
 #include "app_ui.h"
 #include "endpointCfg.h"
-#include "zclApp.h"
 #include "zb_appCb.h"
+#include "relayCtrl.h"
+#include "backlightCtrl.h"
 
 
 /**********************************************************************
@@ -158,15 +160,15 @@ void user_app_init(void)
 
 	af_nodeDescManuCodeUpdate(MANUFACTURER_CODE_TELINK);
 
+	restoreRelayAll();
+	restoreButtonConfigAll();
+
     /* Initialize ZCL layer */
 	/* Register Incoming ZCL Foundation command/response messages */
 	zcl_init(switch_zclProcessIncomingMsg);
 
 	/* register endPoint */
 	registerAllEndpoints();
-
-	zcl_onOffAttr_restore();
-	zcl_onOffSwitchCfgAttr_restore();
 
 	zcl_reportingTabInit();
 
@@ -178,8 +180,8 @@ void user_app_init(void)
 
 s32 sampleSwitchAttrsStoreTimerCb(void *arg)
 {
-	zcl_onOffAttr_save();
-	zcl_onOffSwitchCfgAttr_save();
+	saveRelayAll();
+	saveButtonConfigAll();
 
 	sampleSwitchAttrsStoreTimerEvt = NULL;
 	return -1;
@@ -195,8 +197,8 @@ void sampleSwitchAttrsStoreTimerStart(void)
 
 void sampleSwitchAttrsChk(void)
 {
-	if(g_switchAppCtx.switchAttrsChanged){
-		g_switchAppCtx.switchAttrsChanged = FALSE;
+	if(g_switchAppCtx.relayCfgAttrsChanged){
+		g_switchAppCtx.relayCfgAttrsChanged = FALSE;
 		if(zb_isDeviceJoinedNwk()){
 			sampleSwitchAttrsStoreTimerStart();
 		}
@@ -219,7 +221,8 @@ void app_task(void)
 
 static void sampleSwitchSysException(void)
 {
-	zcl_onOffAttr_save();
+	saveRelayAll();
+	saveButtonConfigAll();
 	SYSTEM_RESET();
 }
 
@@ -235,7 +238,7 @@ static void sampleSwitchSysException(void)
 void user_init(bool isRetention)
 {
 	/* Initialize LEDs*/
-	led_init();
+	initBacklight();
 
 	if(!isRetention){
 		/* Initialize Stack */

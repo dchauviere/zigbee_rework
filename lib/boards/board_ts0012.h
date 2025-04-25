@@ -73,7 +73,7 @@ extern "C" {
 #define PB5_OUTPUT_ENABLE			1
 #define PB5_INPUT_ENABLE			0
 
-#define RELAYS_PIN {RELAY1, RELAY2}
+#define RELAYS_NUM					2
 
 // LED
 // GPIO_C0
@@ -88,7 +88,7 @@ extern "C" {
 #define PD3_OUTPUT_ENABLE			1
 #define PD3_INPUT_ENABLE			0
 
-#define LEDS_PIN                    {LED1, LED2}
+#define LEDS_NUM                    2
 
 #define LED_POWER					LED1
 

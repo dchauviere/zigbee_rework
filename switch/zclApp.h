@@ -48,17 +48,26 @@ extern zcl_sceneAttr_t g_zcl_sceneAttrs;
 status_t switch_sceneCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPayload);
 
 // OnOff
+typedef struct{
+	u16	 onTime;
+	u16	 offWaitTime;
+	u8	 startUpOnOff;
+	bool onOff;
+	bool globalSceneControl;
+	u8 	 onSwitchTrigger;
+	u8   backlightMode;
+}zcl_onOffAttr_t;
+
 status_t switch_onOffCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPayload);
-void switch_onoff(u8 cmd);
-void switch_onOffUpdate(u8 btn, u8 cmd);
-nv_sts_t zcl_onOffAttr_save(void);
-nv_sts_t zcl_onOffAttr_restore(void);
 
 // OnOffSwitchConfig
+typedef struct{
+	u8 switchMode;
+	u8 switchAction;
+	u8 longAction;
+}zcl_onOffSwitchCfgAttr_t;
 
 status_t zcl_onOffSwitchCfg_register(u8 endpoint, u16 manuCode, u8 attrNum, const zclAttrInfo_t attrTbl[], cluster_forAppCb_t cb);
 status_t switch_onOffSwitchCfgCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPayload);
-nv_sts_t zcl_onOffSwitchCfgAttr_save(void);
-nv_sts_t zcl_onOffSwitchCfgAttr_restore(void);
 
 #endif

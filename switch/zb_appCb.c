@@ -33,11 +33,12 @@
 #include "zcl_include.h"
 #include "bdb.h"
 #include "ota.h"
-#include "switchApp.h"
 #include "endpointCfg.h"
 #include "zclApp.h"
+#include "switchApp.h"
 #include "zb_appCb.h"
 #include "app_ui.h"
+#include "backlightCtrl.h"
 
 /**********************************************************************
  * LOCAL CONSTANTS
@@ -170,7 +171,7 @@ void zbdemo_bdbCommissioningCb(u8 status, void *arg){
 
 	switch(status){
 		case BDB_COMMISSION_STA_SUCCESS:
-			light_blink_start(2, 200, 200);
+			startBacklightBlink(ENDPOINT_1, 2, 200, 200);
 
 			zb_setPollRate(POLL_RATE * 3);
 

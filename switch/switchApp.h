@@ -36,6 +36,22 @@ typedef struct{
 }app_linkKey_info_t;
 
 typedef struct{
+	u8 level;
+	bool dir;
+	u16 transitionTime;
+}app_buttonAttr_t;
+
+typedef struct{
+	bool inverted;
+	ev_timer_event_t *timer;
+	u8 times;
+	u8 originalState;
+	u8 state;
+	u16 ledOnTime;
+	u16 ledOffTime;
+}app_backlight_t;
+
+typedef struct{
 	ev_timer_event_t *bdbFBTimerEvt;
 	ev_timer_event_t *timerLedEvt;
     s32 Vbat;		//current voltage
@@ -47,12 +63,17 @@ typedef struct{
 	u8 	times;		//blink times
 	u8  state;
 
-	bool switchAttrsChanged;
+	bool relayCfgAttrsChanged;
 
 	u32 keyPressedTime;
 	u32 actionTime;
 
 	app_linkKey_info_t tcLinkKey;
+
+	zcl_onOffAttr_t relayAttrs[RELAYS_NUM];
+	zcl_onOffSwitchCfgAttr_t relayCfgAttrs[BUTTON_NUM];
+	app_buttonAttr_t buttonAttrs[BUTTON_NUM];
+	app_backlight_t backlightAttrs[LEDS_NUM];
 }app_ctx_t;
 
 /**********************************************************************

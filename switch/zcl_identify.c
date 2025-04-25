@@ -48,10 +48,10 @@ void switch_zclIdentifyCmdHandler(u8 endpoint, u16 srcAddr, u16 identifyTime)
 
 	if(identifyTime == 0){
 		switch_zclIdentifyTimerStop();
-		light_blink_stop();
+		stopBacklightBlink(endpoint - 1);
 	}else{
 		if(!identifyTimerEvt){
-			light_blink_start(identifyTime, 500, 500);
+			startBacklightBlink(endpoint - 1, identifyTime, 500, 500);
 			identifyTimerEvt = TL_ZB_TIMER_SCHEDULE(switch_zclIdentifyTimerCb, NULL, 1000);
 		}
 	}
@@ -73,22 +73,22 @@ static void switch_zcltriggerCmdHandler(zcl_triggerEffect_t *pTriggerEffect)
 
 	switch(effectId){
 		case IDENTIFY_EFFECT_BLINK:
-			light_blink_start(1, 500, 500);
+			startBacklightBlink(ENDPOINT_1, 1, 500, 500);
 			break;
 		case IDENTIFY_EFFECT_BREATHE:
-			light_blink_start(15, 300, 700);
+			startBacklightBlink(ENDPOINT_1, 15, 300, 700);
 			break;
 		case IDENTIFY_EFFECT_OKAY:
-			light_blink_start(2, 250, 250);
+			startBacklightBlink(ENDPOINT_1, 2, 250, 250);
 			break;
 		case IDENTIFY_EFFECT_CHANNEL_CHANGE:
-			light_blink_start(1, 500, 7500);
+			startBacklightBlink(ENDPOINT_1, 1, 500, 7500);
 			break;
 		case IDENTIFY_EFFECT_FINISH_EFFECT:
-			light_blink_start(1, 300, 700);
+			startBacklightBlink(ENDPOINT_1, 1, 300, 700);
 			break;
 		case IDENTIFY_EFFECT_STOP_EFFECT:
-			light_blink_stop();
+			stopBacklightBlink(ENDPOINT_1);
 			break;
 		default:
 			break;

@@ -30,7 +30,7 @@
 
 
 #define APP_RELEASE							0x01//app release 1.0
-#define APP_BUILD							0x02//app build 01
+#define APP_BUILD							0x06//app build 01
 #define STACK_RELEASE						0x30//stack release 3.0
 #define STACK_BUILD							0x01//stack build 01
 
@@ -51,11 +51,11 @@
 #define IMAGE_OFFSET						APP_IMAGE_ADDR
 
 #ifndef ZCL_BASIC_SW_BUILD_ID //max 16 chars
-	#define ZCL_BASIC_SW_BUILD_ID       {9,'0','.','1','.','1','-','D','C','E'}
+	#define ZCL_BASIC_SW_BUILD_ID       {9,'0','.','1','.','2','-','D','C','E'}
 #endif
 
 #ifndef ZCL_BASIC_DATE_CODE
-	#define ZCL_BASIC_DATE_CODE  {8,'2','0','2','5','0','4','1','5'}
+	#define ZCL_BASIC_DATE_CODE  {8,'2','0','2','5','0','4','2','0'}
 #endif
 
 /*

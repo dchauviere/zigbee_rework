@@ -33,7 +33,7 @@
 #include "zcl_include.h"
 #include "endpointCfg.h"
 #include "zclApp.h"
-#include "app_ui.h"
+#include "backlightCtrl.h"
 
 
 /**********************************************************************
@@ -44,7 +44,7 @@ static void switch_zclWriteRspCmd(u16 clusterId, zclWriteRspCmd_t *pWriteRspCmd)
 static void switch_zclWriteReqCmd(u16 clusterId, zclWriteCmd_t *pWriteReqCmd);
 static void switch_zclCfgReportCmd(u16 clusterId, zclCfgReportCmd_t *pCfgReportCmd);
 static void switch_zclCfgReportRspCmd(u16 clusterId, zclCfgReportRspCmd_t *pCfgReportRspCmd);
-static void switch_zclReportCmd(u16 clusterId, zclReportCmd_t *pReportCmd);
+static void switch_zclReportCmd(u8 endpoint, u16 clusterId, zclReportCmd_t *pReportCmd);
 static void switch_zclDfltRspCmd(u16 clusterId, zclDefaultRspCmd_t *pDftRspCmd);
 
 
@@ -60,6 +60,7 @@ static void switch_zclDfltRspCmd(u16 clusterId, zclDefaultRspCmd_t *pDftRspCmd);
 void switch_zclProcessIncomingMsg(zclIncoming_t *pInHdlrMsg)
 {
 	u16 cluster = pInHdlrMsg->msg->indInfo.cluster_id;
+	u8 endpoint = pInHdlrMsg->addrInfo.dstEp;
 	switch(pInHdlrMsg->hdr.cmd)
 	{
 		case ZCL_CMD_READ_RSP:
@@ -78,7 +79,7 @@ void switch_zclProcessIncomingMsg(zclIncoming_t *pInHdlrMsg)
 			switch_zclCfgReportRspCmd(cluster, pInHdlrMsg->attrCmd);
 			break;
 		case ZCL_CMD_REPORT:
-			switch_zclReportCmd(cluster, pInHdlrMsg->attrCmd);
+			switch_zclReportCmd(endpoint, cluster, pInHdlrMsg->attrCmd);
 			break;
 		case ZCL_CMD_DEFAULT_RSP:
 			switch_zclDfltRspCmd(cluster, pInHdlrMsg->attrCmd);
@@ -182,9 +183,18 @@ static void switch_zclCfgReportRspCmd(u16 clusterId, zclCfgReportRspCmd_t *pCfgR
  *
  * @return  None
  */
-static void switch_zclReportCmd(u16 clusterId, zclReportCmd_t *pReportCmd)
+static void switch_zclReportCmd(u8 endpoint, u16 clusterId, zclReportCmd_t *pReportCmd)
 {
-
+	for (u8 i=0;i<pReportCmd->numAttr;i++){
+		if (pReportCmd->attrList[i].attrID == ZCL_ATTRID_ONOFF) {
+			u8 state = pReportCmd->attrList[i].attrData[0];
+			if (state) {
+				setBacklightOn(endpoint - 1);
+			}else{
+				setBacklightOff(endpoint - 1);
+			}
+		}
+	}
 }
 
 #endif  /* __PROJECT_TL_SWITCH__ */

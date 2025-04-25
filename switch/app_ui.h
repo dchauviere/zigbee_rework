@@ -39,6 +39,8 @@
 #define APP_DEFAULT_ACTION_HOLD_TRANSITION 2*500*1000
 #define APP_DEFAULT_ACTION_HOLD_STEP       50
 
+#define NV_ITEM_APP_BUTTON_BASE 			0x50
+
 /**********************************************************************
  * TYPEDEFS
  */
@@ -54,19 +56,12 @@ enum{
 /**********************************************************************
  * FUNCTIONS
  */
-void light_blink_start(u8 times, u16 ledOnTime, u16 ledOffTime);
-void light_blink_stop(void);
-
-void light_init(void);
-void light_on(void);
-void light_off(void);
-
-void led_on(u32 pin);
-void led_off(u32 pin);
-
-void relay_on(u32 pin);
-void relay_off(u32 pin);
 
 void app_key_handler(void);
+
+void saveButtonConfigAll(void);
+void restoreButtonConfigAll(void);
+nv_sts_t saveButtonConfig(u8 button);
+nv_sts_t restoreButtonConfig(u8 button);
 
 #endif	/* _APP_UI_H_ */
