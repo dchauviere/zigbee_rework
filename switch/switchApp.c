@@ -36,7 +36,7 @@
 #include "zclApp.h"
 #include "switchApp.h"
 #include "app_ui.h"
-#include "endpointCfg.h"
+#include "endpoints.h"
 #include "zb_appCb.h"
 #include "relayCtrl.h"
 #include "backlightCtrl.h"
@@ -168,14 +168,18 @@ void user_app_init(void)
 	zcl_init(switch_zclProcessIncomingMsg);
 
 	/* register endPoint */
-	registerAllEndpoints();
+	registerConfigEndpoint();
+	registerSwitchEndpoints();
+	registerRelayEndpoints();
 
 	zcl_reportingTabInit();
 
 	/* Register ZCL specific cluster information */
-	registerAllZCL();
+	registerConfigZCL();
+	registerSwitchZCL();
+	registerRelayZCL();
 
-    ota_init(OTA_TYPE_CLIENT, (af_simple_descriptor_t *)&endpoint_simpleDesc, &switch_otaInfo, &switch_otaCb);
+    ota_init(OTA_TYPE_CLIENT, (af_simple_descriptor_t *)&configEndpointSimpleDesc, &switch_otaInfo, &switch_otaCb);
 }
 
 s32 sampleSwitchAttrsStoreTimerCb(void *arg)
@@ -270,7 +274,7 @@ void user_init(bool isRetention)
 
 		/* Initialize BDB */
 		u8 repower = drv_pm_deepSleep_flag_get() ? 0 : 1;
-		bdb_init((af_simple_descriptor_t *)&endpoint_simpleDesc, &g_bdbCommissionSetting, &g_zbDemoBdbCb, repower);
+		bdb_init((af_simple_descriptor_t *)&configEndpointSimpleDesc, &g_bdbCommissionSetting, &g_zbDemoBdbCb, repower);
 	}else{
 		/* Re-config phy when system recovery from deep sleep with retention */
 		mac_phyReconfig();

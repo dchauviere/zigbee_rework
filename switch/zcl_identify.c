@@ -6,7 +6,7 @@
 #include "tl_common.h"
 #include "zb_api.h"
 #include "zcl_include.h"
-#include "endpointCfg.h"
+#include "endpoints.h"
 #include "zclApp.h"
 
 /**********************************************************************
@@ -48,10 +48,10 @@ void switch_zclIdentifyCmdHandler(u8 endpoint, u16 srcAddr, u16 identifyTime)
 
 	if(identifyTime == 0){
 		switch_zclIdentifyTimerStop();
-		stopBacklightBlink(endpoint - 1);
+		stopBacklightBlink(0);
 	}else{
 		if(!identifyTimerEvt){
-			startBacklightBlink(endpoint - 1, identifyTime, 500, 500);
+			startBacklightBlink(0, identifyTime, 500, 500);
 			identifyTimerEvt = TL_ZB_TIMER_SCHEDULE(switch_zclIdentifyTimerCb, NULL, 1000);
 		}
 	}
@@ -73,22 +73,22 @@ static void switch_zcltriggerCmdHandler(zcl_triggerEffect_t *pTriggerEffect)
 
 	switch(effectId){
 		case IDENTIFY_EFFECT_BLINK:
-			startBacklightBlink(ENDPOINT_1, 1, 500, 500);
+			startBacklightBlink(0, 1, 500, 500);
 			break;
 		case IDENTIFY_EFFECT_BREATHE:
-			startBacklightBlink(ENDPOINT_1, 15, 300, 700);
+			startBacklightBlink(0, 15, 300, 700);
 			break;
 		case IDENTIFY_EFFECT_OKAY:
-			startBacklightBlink(ENDPOINT_1, 2, 250, 250);
+			startBacklightBlink(0, 2, 250, 250);
 			break;
 		case IDENTIFY_EFFECT_CHANNEL_CHANGE:
-			startBacklightBlink(ENDPOINT_1, 1, 500, 7500);
+			startBacklightBlink(0, 1, 500, 7500);
 			break;
 		case IDENTIFY_EFFECT_FINISH_EFFECT:
-			startBacklightBlink(ENDPOINT_1, 1, 300, 700);
+			startBacklightBlink(0, 1, 300, 700);
 			break;
 		case IDENTIFY_EFFECT_STOP_EFFECT:
-			stopBacklightBlink(ENDPOINT_1);
+			stopBacklightBlink(0);
 			break;
 		default:
 			break;
@@ -130,22 +130,20 @@ static void switch_zclIdentifyQueryRspCmdHandler(u8 endpoint, u16 srcAddr, zcl_i
  */
 status_t switch_identifyCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPayload)
 {
-	if(pAddrInfo->dstEp == ENDPOINT_1){
-		if(pAddrInfo->dirCluster == ZCL_FRAME_CLIENT_SERVER_DIR){
-			switch(cmdId){
-				case ZCL_CMD_IDENTIFY:
-					switch_zclIdentifyCmdHandler(pAddrInfo->dstEp, pAddrInfo->srcAddr, ((zcl_identifyCmd_t *)cmdPayload)->identifyTime);
-					break;
-				case ZCL_CMD_TRIGGER_EFFECT:
-					switch_zcltriggerCmdHandler((zcl_triggerEffect_t *)cmdPayload);
-					break;
-				default:
-					break;
-			}
-		}else{
-			if(cmdId == ZCL_CMD_IDENTIFY_QUERY_RSP){
-				switch_zclIdentifyQueryRspCmdHandler(pAddrInfo->dstEp, pAddrInfo->srcAddr, (zcl_identifyRspCmd_t *)cmdPayload);
-			}
+	if(pAddrInfo->dirCluster == ZCL_FRAME_CLIENT_SERVER_DIR){
+		switch(cmdId){
+			case ZCL_CMD_IDENTIFY:
+				switch_zclIdentifyCmdHandler(pAddrInfo->dstEp, pAddrInfo->srcAddr, ((zcl_identifyCmd_t *)cmdPayload)->identifyTime);
+				break;
+			case ZCL_CMD_TRIGGER_EFFECT:
+				switch_zcltriggerCmdHandler((zcl_triggerEffect_t *)cmdPayload);
+				break;
+			default:
+				break;
+		}
+	}else{
+		if(cmdId == ZCL_CMD_IDENTIFY_QUERY_RSP){
+			switch_zclIdentifyQueryRspCmdHandler(pAddrInfo->dstEp, pAddrInfo->srcAddr, (zcl_identifyRspCmd_t *)cmdPayload);
 		}
 	}
 

@@ -32,7 +32,7 @@
 #include "tl_common.h"
 #include "zb_api.h"
 #include "zcl_include.h"
-#include "endpointCfg.h"
+#include "endpoints.h"
 #include "zclApp.h"
 #include "switchApp.h"
 
@@ -109,7 +109,7 @@ status_t switch_sceneCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPay
 	status_t status = ZCL_STA_SUCCESS;
 
 	if(pAddrInfo->dstEp <= BUTTON_NUM){
-		u8 relay = pAddrInfo->dstEp - 1;
+		u8 relay = getRelayFromEndpoint(pAddrInfo->dstEp);
 		if(pAddrInfo->dirCluster == ZCL_FRAME_CLIENT_SERVER_DIR){
 			switch(cmdId){
 				case ZCL_CMD_SCENE_STORE_SCENE:

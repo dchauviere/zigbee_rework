@@ -5,7 +5,7 @@
  */
 #include "tl_common.h"
 #include "zcl_include.h"
-#include "endpointCfg.h"
+#include "endpoints.h"
 #include "zclApp.h"
 #include "switchApp.h"
 #include "hardware.h"
@@ -318,13 +318,13 @@ nv_sts_t saveRelayConfig(u8 relay)
 	st = nv_flashReadNew(1, NV_MODULE_ZCL, NV_ITEM_APP_ON_OFF_SWITCH_CFG_BASE + relay, sizeof(zcl_onOffSwitchCfgAttr_t), (u8*)&zcl_nv_onOffSwitchCfg);
 
 	if(st == NV_SUCC){
-		if((zcl_nv_onOffSwitchCfg.switchMode != g_switchAppCtx.relayCfgAttrs[relay].switchMode) || (zcl_nv_onOffSwitchCfg.switchAction != g_switchAppCtx.relayCfgAttrs[relay].switchAction) ){
+		if((zcl_nv_onOffSwitchCfg.switchMode != g_switchAppCtx.switchCfgAttrs[relay].switchMode) || (zcl_nv_onOffSwitchCfg.switchAction != g_switchAppCtx.switchCfgAttrs[relay].switchAction) ){
 			changed = true;
 		}
 	}
 
 	if (changed == true || st == NV_ITEM_NOT_FOUND) {
-		st = nv_flashWriteNew(1, NV_MODULE_ZCL, NV_ITEM_APP_ON_OFF_SWITCH_CFG_BASE + relay, sizeof(zcl_onOffSwitchCfgAttr_t), (u8*)&g_switchAppCtx.relayCfgAttrs[relay]);
+		st = nv_flashWriteNew(1, NV_MODULE_ZCL, NV_ITEM_APP_ON_OFF_SWITCH_CFG_BASE + relay, sizeof(zcl_onOffSwitchCfgAttr_t), (u8*)&g_switchAppCtx.switchCfgAttrs[relay]);
 	}
 
 	return st;
@@ -348,11 +348,11 @@ nv_sts_t restoreRelayConfig(u8 relay)
 	st = nv_flashReadNew(1, NV_MODULE_ZCL,  NV_ITEM_APP_ON_OFF_SWITCH_CFG_BASE + relay, sizeof(zcl_onOffSwitchCfgAttr_t), (u8*)&zcl_nv_onOffSwitchCfg);
 
 	if(st == NV_SUCC){
-		g_switchAppCtx.relayCfgAttrs[relay].switchMode	= zcl_nv_onOffSwitchCfg.switchMode;
-		g_switchAppCtx.relayCfgAttrs[relay].switchAction	= zcl_nv_onOffSwitchCfg.switchAction;
+		g_switchAppCtx.switchCfgAttrs[relay].switchMode	= zcl_nv_onOffSwitchCfg.switchMode;
+		g_switchAppCtx.switchCfgAttrs[relay].switchAction	= zcl_nv_onOffSwitchCfg.switchAction;
 	}else{
-		g_switchAppCtx.relayCfgAttrs[relay].switchMode	= ZCL_SWITCH_TYPE_TOGGLE;
-		g_switchAppCtx.relayCfgAttrs[relay].switchAction	= ZCL_SWITCH_ACTION_TOGGLE;
+		g_switchAppCtx.switchCfgAttrs[relay].switchMode	= ZCL_SWITCH_TYPE_TOGGLE;
+		g_switchAppCtx.switchCfgAttrs[relay].switchAction	= ZCL_SWITCH_ACTION_TOGGLE;
 	}
 
 	return st;
