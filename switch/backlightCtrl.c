@@ -1,6 +1,6 @@
 #include "tl_common.h"
 #include "zcl_include.h"
-#include "endpointCfg.h"
+#include "endpoints.h"
 #include "zclApp.h"
 #include "switchApp.h"
 #include "hardware.h"

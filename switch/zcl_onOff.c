@@ -31,7 +31,7 @@
 #include "tl_common.h"
 #include "zb_api.h"
 #include "zcl_include.h"
-#include "endpointCfg.h"
+#include "endpoints.h"
 #include "zclApp.h"
 #include "relayCtrl.h"
 
@@ -53,8 +53,8 @@
  */
 status_t switch_onOffCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPayload)
 {
-	if(pAddrInfo->dstEp <= BUTTON_NUM){
-		u8 relay = pAddrInfo->dstEp - 1;
+	if(pAddrInfo->dstEp >= RELAY_ENDPOINT_1 && pAddrInfo->dstEp <= RELAY_ENDPOINT_1 + BUTTON_NUM){
+		u8 relay = getRelayFromEndpoint(pAddrInfo->dstEp);
 		switch(cmdId){
 			case ZCL_CMD_ONOFF_ON:
 			case ZCL_CMD_ONOFF_OFF:

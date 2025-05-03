@@ -6,7 +6,7 @@
 #include "tl_common.h"
 #include "zb_api.h"
 #include "zcl_include.h"
-#include "endpointCfg.h"
+#include "endpoints.h"
 #include "zclApp.h"
 
 /*********************************************************************
@@ -78,7 +78,7 @@ static void switch_zclGetGroupMembershipRspCmdHandler(zcl_getGroupMembershipRsp_
  */
 status_t switch_groupCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPayload)
 {
-	if(pAddrInfo->dstEp == ENDPOINT_1){
+	if(pAddrInfo->dstEp == CONFIG_ENDPOINT){
 		if(pAddrInfo->dirCluster == ZCL_FRAME_SERVER_CLIENT_DIR){
 			switch(cmdId){
 				case ZCL_CMD_GROUP_ADD_GROUP_RSP:

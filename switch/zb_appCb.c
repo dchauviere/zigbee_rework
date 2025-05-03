@@ -33,7 +33,7 @@
 #include "zcl_include.h"
 #include "bdb.h"
 #include "ota.h"
-#include "endpointCfg.h"
+#include "endpoints.h"
 #include "zclApp.h"
 #include "switchApp.h"
 #include "zb_appCb.h"
@@ -171,7 +171,7 @@ void zbdemo_bdbCommissioningCb(u8 status, void *arg){
 
 	switch(status){
 		case BDB_COMMISSION_STA_SUCCESS:
-			startBacklightBlink(ENDPOINT_1, 2, 200, 200);
+			startBacklightBlink(0, 2, 200, 200);
 
 			zb_setPollRate(POLL_RATE * 3);
 
@@ -261,7 +261,7 @@ void zbdemo_bdbFindBindSuccessCb(findBindDst_t *pDstInfo){
 	dstEpInfo.dstEp = pDstInfo->endpoint;
 	dstEpInfo.profileId = HA_PROFILE_ID;
 
-	zcl_identify_identifyCmd(ENDPOINT_1, &dstEpInfo, FALSE, 0, 0);
+	zcl_identify_identifyCmd(CONFIG_ENDPOINT, &dstEpInfo, FALSE, 0, 0);
 }
 
 

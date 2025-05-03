@@ -71,7 +71,7 @@ typedef struct{
 	app_linkKey_info_t tcLinkKey;
 
 	zcl_onOffAttr_t relayAttrs[RELAYS_NUM];
-	zcl_onOffSwitchCfgAttr_t relayCfgAttrs[BUTTON_NUM];
+	zcl_onOffSwitchCfgAttr_t switchCfgAttrs[BUTTON_NUM];
 	app_buttonAttr_t buttonAttrs[BUTTON_NUM];
 	app_backlight_t backlightAttrs[LEDS_NUM];
 }app_ctx_t;

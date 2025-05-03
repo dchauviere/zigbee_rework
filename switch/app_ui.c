@@ -32,7 +32,7 @@
 #include "zb_api.h"
 #include "zcl_include.h"
 #include "bdb.h"
-#include "endpointCfg.h"
+#include "endpoints.h"
 #include "relayCtrl.h"
 #include "zclApp.h"
 #include "switchApp.h"
@@ -67,28 +67,28 @@ void app_processMomentary(u8 btn, bool released) {
 	dstEpInfo.dstEp = btn;
 	dstEpInfo.dstAddr.shortAddr = 0xfffc;
 #endif
-	switch(g_switchAppCtx.relayCfgAttrs[btn].switchAction){
+	switch(g_switchAppCtx.switchCfgAttrs[btn].switchAction){
 		case ZCL_SWITCH_ACTION_ON_OFF:
 			if (released) {
 				setRelay(btn, ZCL_CMD_ONOFF_OFF);
-				zcl_onOff_offCmd(btn, &dstEpInfo, FALSE);
+				zcl_onOff_offCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE);
 			} else {
 				setRelay(btn, ZCL_CMD_ONOFF_ON);
-				zcl_onOff_onCmd(btn, &dstEpInfo, FALSE);
+				zcl_onOff_onCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE);
 			}
 			break;
 		case ZCL_SWITCH_ACTION_OFF_ON:
 			if (released) {
 				setRelay(btn, ZCL_CMD_ONOFF_ON);
-				zcl_onOff_onCmd(btn, &dstEpInfo, FALSE);
+				zcl_onOff_onCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE);
 			} else {
 				setRelay(btn, ZCL_CMD_ONOFF_OFF);
-				zcl_onOff_offCmd(btn, &dstEpInfo, FALSE);
+				zcl_onOff_offCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE);
 			}
 			break;
 		case ZCL_SWITCH_ACTION_TOGGLE:
 			setRelay(btn, ZCL_CMD_ONOFF_TOGGLE);
-			zcl_onOff_toggleCmd(btn, &dstEpInfo, FALSE);
+			zcl_onOff_toggleCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE);
 			break;
 	}
 }
@@ -106,11 +106,11 @@ void app_processToggle(u8 btn) {
 	dstEpInfo.dstAddr.shortAddr = 0xfffc;
 #endif
 	setRelay(btn, ZCL_CMD_ONOFF_TOGGLE);
-	zcl_onOff_toggleCmd(btn, &dstEpInfo, FALSE);
+	zcl_onOff_toggleCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE);
 }
 
 void app_processDblClick(u8 btn) {
-	//zcl_onOffAttr_t *onOffAttr = zcl_onoffAttrGet(btn-1);
+	//zcl_onOffAttr_t *onOffAttr = zcl_onoffAttrGet(getEndpointFromSwitch(btn));
 	//refreshSwitch(btn);
 }
 
@@ -135,7 +135,7 @@ void app_processHold(u8 btn) {
 		move2Level.transitionTime = g_switchAppCtx.buttonAttrs[btn].transitionTime;
 		move2Level.level = g_switchAppCtx.buttonAttrs[btn].level;
 
-		zcl_level_move2levelCmd(btn, &dstEpInfo, FALSE, &move2Level);
+		zcl_level_move2levelCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE, &move2Level);
 
 		if(g_switchAppCtx.buttonAttrs[btn].dir){
 			g_switchAppCtx.buttonAttrs[btn].level += APP_DEFAULT_ACTION_HOLD_STEP;
@@ -202,10 +202,14 @@ void app_key_handler(void){
 			valid_keyCode = kb_event.keycode[0] - 1;
 			keyPressed = 1;
 			g_switchAppCtx.keyPressedTime = clock_time();
-			if (g_switchAppCtx.relayCfgAttrs[valid_keyCode].switchMode == ZCL_SWITCH_TYPE_MOMENTARY) {
+			if(!zb_isDeviceJoinedNwk()){
+				printf("try to rejoin network");
+				zb_rejoinReq(zb_apsChannelMaskGet(), g_bdbAttrs.scanDuration);
+			}
+			if (g_switchAppCtx.switchCfgAttrs[valid_keyCode].switchMode == ZCL_SWITCH_TYPE_MOMENTARY) {
 				app_processMomentary(valid_keyCode, false);
 				g_switchAppCtx.state = APP_STATE_WAIT_ACTION_END;
-			} else if (g_switchAppCtx.relayCfgAttrs[valid_keyCode].switchMode == ZCL_SWITCH_TYPE_TOGGLE) {
+			} else if (g_switchAppCtx.switchCfgAttrs[valid_keyCode].switchMode == ZCL_SWITCH_TYPE_TOGGLE) {
 				g_switchAppCtx.state = APP_STATE_WAIT_ACTION_END;
 			} else {
 				g_switchAppCtx.state = APP_STATE_WAIT_KEY_MODE;

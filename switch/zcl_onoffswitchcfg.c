@@ -31,7 +31,7 @@
  #include "tl_common.h"
  #include "zb_api.h"
  #include "zcl_include.h"
- #include "endpointCfg.h"
+ #include "endpoints.h"
  #include "zclApp.h"
  
 #define NV_ITEM_ZCL_ON_OFF_SWITCH_CFG 0x40
