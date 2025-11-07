@@ -23,45 +23,46 @@
  *
  *******************************************************************************************************/
 
-#ifndef _APP_UI_H_
-#define _APP_UI_H_
+#ifndef __SWITCH_CTRL_H__
+#define __SWITCH_CTRL_H__
 
 /**********************************************************************
  * CONSTANT
  */
-#define LED_ON						1
-#define LED_OFF						0
 
-#define RELAY_ON						1
-#define RELAY_OFF						0
+#define NV_ITEM_APP_SWITCH_BASE 			0x50
 
-#define APP_DEFAULT_ACTION_HOLD_THRESHOLD  2*1000*1000
-#define APP_DEFAULT_ACTION_HOLD_TRANSITION 2*500*1000
-#define APP_DEFAULT_ACTION_HOLD_STEP       50
+#define ZCL_SWITCH_TYPE_TOGGLE                  0x00
+#define ZCL_SWITCH_TYPE_MOMENTARY               0x01
+#define ZCL_SWITCH_TYPE_MULTIFUNCTION           0x02
 
-#define NV_ITEM_APP_BUTTON_BASE 			0x50
+#define ZCL_SWITCH_ACTION_ON_OFF                0x00
+#define ZCL_SWITCH_ACTION_OFF_ON                0x01
+#define ZCL_SWITCH_ACTION_TOGGLE                0x02
+
+#define ZCL_RELAY_CONTROL_MODE_OFF              0x00
+#define ZCL_RELAY_CONTROL_MODE_TOGGLE           0x01
 
 /**********************************************************************
  * TYPEDEFS
  */
-enum{
-	APP_STATE_IDLE,
-	APP_STATE_WAIT_KEY_MODE,
-	APP_STATE_ACTION_CLICKS,
-	APP_STATE_ACTION_HOLD,
-	APP_STATE_WAIT_ACTION_END,
-};
 
+typedef struct{
+	u16 transitionTime;
+	u8 switchMode;
+	u8 switchAction;
+	u8 relayControlMode;
+}switchAttr_t;
+
+extern switchAttr_t g_switchAttr[BUTTON_NUM];
 
 /**********************************************************************
  * FUNCTIONS
  */
 
-void app_key_handler(void);
+void initSwitches(void);
+void switchesHandler(void);
+nv_sts_t saveSwitchConfig(u8 sw);
+nv_sts_t restoreSwitchConfig(u8 sw);
 
-void saveButtonConfigAll(void);
-void restoreButtonConfigAll(void);
-nv_sts_t saveButtonConfig(u8 button);
-nv_sts_t restoreButtonConfig(u8 button);
-
-#endif	/* _APP_UI_H_ */
+#endif	/* __BUTTON_CTRL_H__ */

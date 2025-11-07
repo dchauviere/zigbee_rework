@@ -54,7 +54,7 @@
 status_t switch_onOffCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPayload)
 {
 	if(pAddrInfo->dstEp <= BUTTON_NUM){
-		u8 relay = pAddrInfo->dstEp - 1;
+		u8 relay = getRelayFromEndpoint(pAddrInfo->dstEp);
 		switch(cmdId){
 			case ZCL_CMD_ONOFF_ON:
 			case ZCL_CMD_ONOFF_OFF:

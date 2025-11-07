@@ -35,6 +35,7 @@
 #include "endpointCfg.h"
 #include "zclApp.h"
 #include "switchApp.h"
+#include "relayCtrl.h"
 
 
 /*********************************************************************
@@ -85,7 +86,7 @@ static void switch_sceneStoreReqHandler(u8 relay, zcl_sceneEntry_t *pScene)
 {
 	u8 extLen = 0;
 
-	zcl_onOffAttr_t *pOnOff = &g_switchAppCtx.relayAttrs[relay];
+	relayAttr_t *pOnOff = &g_relayAttr[relay];
 
 	pScene->extField[extLen++] = LO_UINT16(ZCL_CLUSTER_GEN_ON_OFF);
 	pScene->extField[extLen++] = HI_UINT16(ZCL_CLUSTER_GEN_ON_OFF);
@@ -109,7 +110,7 @@ status_t switch_sceneCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPay
 	status_t status = ZCL_STA_SUCCESS;
 
 	if(pAddrInfo->dstEp <= BUTTON_NUM){
-		u8 relay = pAddrInfo->dstEp - 1;
+		u8 relay = getRelayFromEndpoint(pAddrInfo->dstEp);
 		if(pAddrInfo->dirCluster == ZCL_FRAME_CLIENT_SERVER_DIR){
 			switch(cmdId){
 				case ZCL_CMD_SCENE_STORE_SCENE:

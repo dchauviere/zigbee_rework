@@ -35,24 +35,50 @@
 #include "endpointCfg.h"
 #include "relayCtrl.h"
 #include "zclApp.h"
+#include "globalConfig.h"
 #include "switchApp.h"
-#include "app_ui.h"
+#include "switchCtrl.h"
+
 
 /**********************************************************************
- * LOCAL CONSTANTS
+ * GLOBAL VARIABLES
  */
+switchAttr_t g_switchAttr[BUTTON_NUM];
+
 
 /**********************************************************************
  * TYPEDEFS
  */
+enum{
+	APP_STATE_IDLE,
+	APP_STATE_WAIT_KEY_MODE,
+	APP_STATE_ACTION_CLICKS,
+	APP_STATE_ACTION_HOLD,
+	APP_STATE_WAIT_ACTION_END,
+};
+
+typedef struct{
+	u8 level;
+	bool dir;
+} switchState_t;
+
+
+/**********************************************************************
+ * LOCAL VARIABLES
+ */
+switchState_t l_switchState[BUTTON_NUM];
 
 
 /**********************************************************************
  * LOCAL FUNCTIONS
  */
 
-void set_detect_voltage(s32 v){
-    g_switchAppCtx.Vbat = v;
+void initSwitches(void) {
+	for(u8 sw=0;sw<BUTTON_NUM;sw++) {
+		l_switchState[sw].dir = true;
+		l_switchState[sw].level = 1;
+		restoreSwitchConfig(sw);
+	}
 }
 
 void app_processMomentary(u8 btn, bool released) {
@@ -60,35 +86,32 @@ void app_processMomentary(u8 btn, bool released) {
 	TL_SETSTRUCTCONTENT(dstEpInfo, 0);
 
 	dstEpInfo.profileId = HA_PROFILE_ID;
-#if FIND_AND_BIND_SUPPORT
 	dstEpInfo.dstAddrMode = APS_DSTADDR_EP_NOTPRESETNT;
-#else
-	dstEpInfo.dstAddrMode = APS_SHORT_DSTADDR_WITHEP;
-	dstEpInfo.dstEp = btn;
-	dstEpInfo.dstAddr.shortAddr = 0xfffc;
-#endif
-	switch(g_switchAppCtx.relayCfgAttrs[btn].switchAction){
+
+	switch(g_switchAttr[btn].switchAction){
 		case ZCL_SWITCH_ACTION_ON_OFF:
 			if (released) {
 				setRelay(btn, ZCL_CMD_ONOFF_OFF);
-				zcl_onOff_offCmd(btn, &dstEpInfo, FALSE);
+				zcl_onOff_offCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE);
 			} else {
 				setRelay(btn, ZCL_CMD_ONOFF_ON);
-				zcl_onOff_onCmd(btn, &dstEpInfo, FALSE);
+				zcl_onOff_onCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE);
 			}
 			break;
 		case ZCL_SWITCH_ACTION_OFF_ON:
 			if (released) {
 				setRelay(btn, ZCL_CMD_ONOFF_ON);
-				zcl_onOff_onCmd(btn, &dstEpInfo, FALSE);
+				zcl_onOff_onCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE);
 			} else {
 				setRelay(btn, ZCL_CMD_ONOFF_OFF);
-				zcl_onOff_offCmd(btn, &dstEpInfo, FALSE);
+				zcl_onOff_offCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE);
 			}
 			break;
 		case ZCL_SWITCH_ACTION_TOGGLE:
-			setRelay(btn, ZCL_CMD_ONOFF_TOGGLE);
-			zcl_onOff_toggleCmd(btn, &dstEpInfo, FALSE);
+			if (g_switchAttr[btn].relayControlMode == ZCL_RELAY_CONTROL_MODE_TOGGLE) {
+				setRelay(btn, ZCL_CMD_ONOFF_TOGGLE);
+			}
+				zcl_onOff_toggleCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE);
 			break;
 	}
 }
@@ -98,15 +121,12 @@ void app_processToggle(u8 btn) {
 	TL_SETSTRUCTCONTENT(dstEpInfo, 0);
 
 	dstEpInfo.profileId = HA_PROFILE_ID;
-#if FIND_AND_BIND_SUPPORT
 	dstEpInfo.dstAddrMode = APS_DSTADDR_EP_NOTPRESETNT;
-#else
-	dstEpInfo.dstAddrMode = APS_SHORT_DSTADDR_WITHEP;
-	dstEpInfo.dstEp = btn;
-	dstEpInfo.dstAddr.shortAddr = 0xfffc;
-#endif
-	setRelay(btn, ZCL_CMD_ONOFF_TOGGLE);
-	zcl_onOff_toggleCmd(btn, &dstEpInfo, FALSE);
+
+	if (g_switchAttr[btn].relayControlMode == ZCL_RELAY_CONTROL_MODE_TOGGLE) {
+		setRelay(btn, ZCL_CMD_ONOFF_TOGGLE);
+	}
+	zcl_onOff_toggleCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE);
 }
 
 void app_processDblClick(u8 btn) {
@@ -121,31 +141,25 @@ void app_processHold(u8 btn) {
 		TL_SETSTRUCTCONTENT(dstEpInfo, 0);
 
 		dstEpInfo.profileId = HA_PROFILE_ID;
-#if FIND_AND_BIND_SUPPORT
 		dstEpInfo.dstAddrMode = APS_DSTADDR_EP_NOTPRESETNT;
-#else
-		dstEpInfo.dstAddrMode = APS_SHORT_DSTADDR_WITHEP;
-		dstEpInfo.dstEp = btn;
-		dstEpInfo.dstAddr.shortAddr = 0xfffc;
-#endif
 
 		moveToLvl_t move2Level;
 
 		move2Level.optPresent = 0;
-		move2Level.transitionTime = g_switchAppCtx.buttonAttrs[btn].transitionTime;
-		move2Level.level = g_switchAppCtx.buttonAttrs[btn].level;
+		move2Level.transitionTime = g_switchAttr[btn].transitionTime;
+		move2Level.level = l_switchState[btn].level;
 
-		zcl_level_move2levelCmd(btn, &dstEpInfo, FALSE, &move2Level);
+		zcl_level_move2levelCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE, &move2Level);
 
-		if(g_switchAppCtx.buttonAttrs[btn].dir){
-			g_switchAppCtx.buttonAttrs[btn].level += APP_DEFAULT_ACTION_HOLD_STEP;
-			if(g_switchAppCtx.buttonAttrs[btn].level >= 250){
-				g_switchAppCtx.buttonAttrs[btn].dir = !g_switchAppCtx.buttonAttrs[btn].dir;
+		if(l_switchState[btn].dir){
+			l_switchState[btn].level += g_globalConfig.actionHoldStep;
+			if(l_switchState[btn].level >= 250){
+				l_switchState[btn].dir = !l_switchState[btn].dir;
 			}
 		}else{
-			g_switchAppCtx.buttonAttrs[btn].level -= APP_DEFAULT_ACTION_HOLD_STEP;
-			if(g_switchAppCtx.buttonAttrs[btn].level <= 1){
-				g_switchAppCtx.buttonAttrs[btn].dir = !g_switchAppCtx.buttonAttrs[btn].dir;
+			l_switchState[btn].level -= g_globalConfig.actionHoldStep;
+			if(l_switchState[btn].level <= 1){
+				l_switchState[btn].dir = !l_switchState[btn].dir;
 			}
 		}
 	} else {
@@ -176,76 +190,73 @@ void app_processClicks(u8 btn, u8 nbClicks) {
 	}
 }
 
-void app_key_handler(void){
+void switchesHandler(void){
 	static u8 valid_keyCode = 0xff;
 	static u8 nbClicks = 0x00;
-	static u8 keyPressed = 0x00;
+	static u32 resetTime = 0x00;
+	static u32 keyPressedTime = 0x00;
+	static u32 actionTime = 0x00;
+	static u8  state =APP_STATE_IDLE;
 
-	if (g_switchAppCtx.state == APP_STATE_ACTION_CLICKS && clock_time_exceed(g_switchAppCtx.actionTime, 500*1000)){
+	if (state == APP_STATE_ACTION_CLICKS && clock_time_exceed(actionTime, g_globalConfig.actionclickTransition*1000)){
 		printf("Action clicks nbClicks=%d\n", nbClicks);
 		app_processClicks(valid_keyCode, nbClicks);
-		g_switchAppCtx.state = APP_STATE_IDLE;
+		state = APP_STATE_IDLE;
   		nbClicks = 0;
-	} else if (g_switchAppCtx.state == APP_STATE_WAIT_KEY_MODE && clock_time_exceed(g_switchAppCtx.keyPressedTime, APP_DEFAULT_ACTION_HOLD_THRESHOLD)) {
-		g_switchAppCtx.state = APP_STATE_ACTION_HOLD;
+	} else if (state == APP_STATE_WAIT_KEY_MODE && clock_time_exceed(keyPressedTime, g_globalConfig.actionHoldThreshold*1000)) {
+		state = APP_STATE_ACTION_HOLD;
 		app_processHold(valid_keyCode);
-		g_switchAppCtx.keyPressedTime = clock_time();
-	} else if (g_switchAppCtx.state == APP_STATE_ACTION_HOLD && clock_time_exceed(g_switchAppCtx.keyPressedTime, APP_DEFAULT_ACTION_HOLD_TRANSITION)) {
+		keyPressedTime = clock_time();
+	} else if (state == APP_STATE_ACTION_HOLD && clock_time_exceed(keyPressedTime, g_globalConfig.actionHoldTransition*1000)) {
 		app_processHold(valid_keyCode);
-		g_switchAppCtx.keyPressedTime = clock_time();
+		keyPressedTime = clock_time();
 	}
 
 	if(kb_scan_key(0, 1)){
 		if(kb_event.cnt == 1){
 			// Key Pressed
 			printf("key pressed\n");
+			resetTime = clock_time();
 			valid_keyCode = kb_event.keycode[0] - 1;
-			keyPressed = 1;
-			g_switchAppCtx.keyPressedTime = clock_time();
-			if (g_switchAppCtx.relayCfgAttrs[valid_keyCode].switchMode == ZCL_SWITCH_TYPE_MOMENTARY) {
+			keyPressedTime = clock_time();
+			if (g_switchAttr[valid_keyCode].switchMode == ZCL_SWITCH_TYPE_MOMENTARY) {
 				app_processMomentary(valid_keyCode, false);
-				g_switchAppCtx.state = APP_STATE_WAIT_ACTION_END;
-			} else if (g_switchAppCtx.relayCfgAttrs[valid_keyCode].switchMode == ZCL_SWITCH_TYPE_TOGGLE) {
-				g_switchAppCtx.state = APP_STATE_WAIT_ACTION_END;
+				state = APP_STATE_WAIT_ACTION_END;
+			} else if (g_switchAttr[valid_keyCode].switchMode == ZCL_SWITCH_TYPE_TOGGLE) {
+				state = APP_STATE_WAIT_ACTION_END;
 			} else {
-				g_switchAppCtx.state = APP_STATE_WAIT_KEY_MODE;
+				state = APP_STATE_WAIT_KEY_MODE;
 			}
 		}else{
 			// Key Released
 			printf("key released\n");
-			keyPressed = 0;
-			if (g_switchAppCtx.state == APP_STATE_WAIT_KEY_MODE) { 
+			if (clock_time_exceed(resetTime, g_globalConfig.resetDuration*1000*1000)){
+    	  		// Factory Reset
+			  	printf("factory reset\n");
+			  	zb_factoryReset();  
+			}
+			
+			if (state == APP_STATE_WAIT_KEY_MODE) { 
 				nbClicks++;
-				g_switchAppCtx.actionTime = clock_time();
-				g_switchAppCtx.state = APP_STATE_ACTION_CLICKS;
-			} else if (g_switchAppCtx.state == APP_STATE_WAIT_ACTION_END) {
-				if (clock_time_exceed(g_switchAppCtx.actionTime, 500*1000)) {
+				actionTime = clock_time();
+				state = APP_STATE_ACTION_CLICKS;
+			} else if (state == APP_STATE_WAIT_ACTION_END) {
+				if (clock_time_exceed(actionTime, 500*1000)) {
 					app_processMomentary(valid_keyCode, true);
 				}
 				valid_keyCode = 0xff;
-				g_switchAppCtx.state = APP_STATE_IDLE;
+				state = APP_STATE_IDLE;
 			} else {
 				valid_keyCode = 0xff;
-				g_switchAppCtx.state = APP_STATE_IDLE;
+				state = APP_STATE_IDLE;
 			}
 		}
 	}
 }
 
-void saveButtonConfigAll(void) {
-	for (u8 b=0;b<BUTTON_NUM;b++) {
-		saveButtonConfig(b);
-	}
-}
-
-void restoreButtonConfigAll(void) {
-	for (u8 b=0;b<BUTTON_NUM;b++) {
-		restoreButtonConfig(b);
-	}
-}
 
 /*********************************************************************
- * @fn      saveButtonConfig
+ * @fn      saveSwitchConfig
  *
  * @brief
  *
@@ -253,30 +264,32 @@ void restoreButtonConfigAll(void) {
  *
  * @return
  */
-nv_sts_t saveButtonConfig(u8 button)
+nv_sts_t saveSwitchConfig(u8 sw)
 {
 	nv_sts_t st = NV_SUCC;
 	bool changed = false;
 
-	app_buttonAttr_t app_buttonAttr;
+	switchAttr_t l_switchAttr;
 
-	st = nv_flashReadNew(1, NV_MODULE_ZCL, NV_ITEM_APP_BUTTON_BASE + button, sizeof(app_buttonAttr_t), (u8*)&app_buttonAttr);
+	st = nv_flashReadNew(1, NV_MODULE_ZCL, NV_ITEM_APP_SWITCH_BASE + sw, sizeof(switchAttr_t), (u8*)&l_switchAttr);
 
 	if(st == NV_SUCC){
-		if((app_buttonAttr.level != g_switchAppCtx.buttonAttrs[button].level) || (app_buttonAttr.dir != g_switchAppCtx.buttonAttrs[button].dir) || (app_buttonAttr.transitionTime != g_switchAppCtx.buttonAttrs[button].transitionTime) ){
+		if ((l_switchAttr.transitionTime != g_switchAttr[sw].transitionTime)
+		|| (l_switchAttr.switchAction != g_switchAttr[sw].switchAction)
+		|| (l_switchAttr.switchMode != g_switchAttr[sw].switchMode) ){
 			changed = true;
 		}
 	}
 
 	if (changed == true || st == NV_ITEM_NOT_FOUND) {
-		st = nv_flashWriteNew(1, NV_MODULE_ZCL, NV_ITEM_APP_BUTTON_BASE + button, sizeof(app_buttonAttr_t), (u8*)&g_switchAppCtx.buttonAttrs[button]);
+		st = nv_flashWriteNew(1, NV_MODULE_ZCL, NV_ITEM_APP_SWITCH_BASE + sw, sizeof(switchAttr_t), (u8*)&g_switchAttr[sw]);
 	}
 
 	return st;
 }
 
 /*********************************************************************
- * @fn      restoreButtonConfig
+ * @fn      restoreSwitchConfig
  *
  * @brief
  *
@@ -284,22 +297,22 @@ nv_sts_t saveButtonConfig(u8 button)
  *
  * @return
  */
-nv_sts_t restoreButtonConfig(u8 button)
+nv_sts_t restoreSwitchConfig(u8 sw)
 {
 	nv_sts_t st = NV_SUCC;
 
-	app_buttonAttr_t app_buttonAttr;
+	switchAttr_t l_switchAttr;
 
-	st = nv_flashReadNew(1, NV_MODULE_ZCL,  NV_ITEM_APP_ON_OFF_SWITCH_CFG_BASE + button, sizeof(app_buttonAttr_t), (u8*)&app_buttonAttr);
+	st = nv_flashReadNew(1, NV_MODULE_ZCL,  NV_ITEM_APP_SWITCH_BASE + sw, sizeof(switchAttr_t), (u8*)&l_switchAttr);
 
 	if(st == NV_SUCC){
-		g_switchAppCtx.buttonAttrs[button].level	= app_buttonAttr.level;
-		g_switchAppCtx.buttonAttrs[button].dir	= app_buttonAttr.dir;
-		g_switchAppCtx.buttonAttrs[button].transitionTime	= app_buttonAttr.transitionTime;
+		g_switchAttr[sw].transitionTime	= l_switchAttr.transitionTime;
+		g_switchAttr[sw].switchAction = l_switchAttr.switchAction;
+		g_switchAttr[sw].switchMode = l_switchAttr.switchMode;
 	}else{
-		g_switchAppCtx.buttonAttrs[button].level	= 1;
-		g_switchAppCtx.buttonAttrs[button].dir	= TRUE;
-		g_switchAppCtx.buttonAttrs[button].transitionTime = 0x0A;
+		g_switchAttr[sw].transitionTime = 0x0A;
+		g_switchAttr[sw].switchAction = ZCL_SWITCH_ACTION_ON_OFF;
+		g_switchAttr[sw].switchMode = ZCL_SWITCH_TYPE_TOGGLE;
 	}
 
 	return st;

@@ -37,7 +37,6 @@
 #include "zclApp.h"
 #include "switchApp.h"
 #include "zb_appCb.h"
-#include "app_ui.h"
 #include "backlightCtrl.h"
 
 /**********************************************************************
@@ -171,7 +170,7 @@ void zbdemo_bdbCommissioningCb(u8 status, void *arg){
 
 	switch(status){
 		case BDB_COMMISSION_STA_SUCCESS:
-			startBacklightBlink(ENDPOINT_1, 2, 200, 200);
+			startBacklightBlink(0, 2, 200, 200);
 
 			zb_setPollRate(POLL_RATE * 3);
 

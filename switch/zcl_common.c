@@ -189,9 +189,9 @@ static void switch_zclReportCmd(u8 endpoint, u16 clusterId, zclReportCmd_t *pRep
 		if (pReportCmd->attrList[i].attrID == ZCL_ATTRID_ONOFF) {
 			u8 state = pReportCmd->attrList[i].attrData[0];
 			if (state) {
-				setBacklightOn(endpoint - 1);
+				setBacklightOn(getRelayFromEndpoint(endpoint));
 			}else{
-				setBacklightOff(endpoint - 1);
+				setBacklightOff(getRelayFromEndpoint(endpoint));
 			}
 		}
 	}

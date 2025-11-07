@@ -33,9 +33,10 @@
 #include "zcl_include.h"
 #include "bdb.h"
 #include "ota.h"
+#include "globalConfig.h"
 #include "zclApp.h"
 #include "switchApp.h"
-#include "app_ui.h"
+#include "switchCtrl.h"
 #include "endpointCfg.h"
 #include "zb_appCb.h"
 #include "relayCtrl.h"
@@ -160,9 +161,6 @@ void user_app_init(void)
 
 	af_nodeDescManuCodeUpdate(MANUFACTURER_CODE_TELINK);
 
-	restoreRelayAll();
-	restoreButtonConfigAll();
-
     /* Initialize ZCL layer */
 	/* Register Incoming ZCL Foundation command/response messages */
 	zcl_init(switch_zclProcessIncomingMsg);
@@ -180,8 +178,11 @@ void user_app_init(void)
 
 s32 sampleSwitchAttrsStoreTimerCb(void *arg)
 {
-	saveRelayAll();
-	saveButtonConfigAll();
+	saveGlobalConfig();
+	for (u8 b=0;b<BUTTON_NUM;b++) {
+		saveRelayConfig(b);
+		saveSwitchConfig(b);	
+	}
 
 	sampleSwitchAttrsStoreTimerEvt = NULL;
 	return -1;
@@ -205,14 +206,9 @@ void sampleSwitchAttrsChk(void)
 	}
 }
 
-void led_init(void)
-{
-	light_init();
-}
-
 void app_task(void)
 {
-	app_key_handler();
+	switchesHandler();
 
 	if(bdb_isIdle()){
 		report_handler();
@@ -221,8 +217,11 @@ void app_task(void)
 
 static void sampleSwitchSysException(void)
 {
-	saveRelayAll();
-	saveButtonConfigAll();
+	saveGlobalConfig();
+	for (u8 b=0;b<BUTTON_NUM;b++) {
+		saveRelayConfig(b);
+		saveSwitchConfig(b);	
+	}
 	SYSTEM_RESET();
 }
 
@@ -237,8 +236,9 @@ static void sampleSwitchSysException(void)
  */
 void user_init(bool isRetention)
 {
-	/* Initialize LEDs*/
-	initBacklight();
+	restoreGlobalConfig();
+	initRelays();
+	initSwitches();
 
 	if(!isRetention){
 		/* Initialize Stack */
