@@ -23,8 +23,6 @@
  *
  *******************************************************************************************************/
 
-#if (__PROJECT_TL_SWITCH__)
-
 /**********************************************************************
  * INCLUDES
  */
@@ -321,6 +319,3 @@ void switch_leaveIndHandler(nlme_leave_ind_t *pLeaveInd)
     //printf("switch_leaveIndHandler, rejoin = %d\n", pLeaveInd->rejoin);
     //printfArray(pLeaveInd->device_address, 8);
 }
-
-
-#endif  /* __PROJECT_TL_SWITCH__ */

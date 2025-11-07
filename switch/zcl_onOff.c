@@ -23,8 +23,6 @@
  *
  *******************************************************************************************************/
 
-#if (__PROJECT_TL_SWITCH__)
-
 /**********************************************************************
  * INCLUDES
  */
@@ -77,6 +75,3 @@ status_t switch_onOffCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPay
 
 	return ZCL_STA_SUCCESS;
 }
-
-
-#endif  /* __PROJECT_TL_SWITCH__ */

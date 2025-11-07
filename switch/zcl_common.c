@@ -23,8 +23,6 @@
  *
  *******************************************************************************************************/
 
-#if (__PROJECT_TL_SWITCH__)
-
 /**********************************************************************
  * INCLUDES
  */
@@ -196,5 +194,3 @@ static void switch_zclReportCmd(u8 endpoint, u16 clusterId, zclReportCmd_t *pRep
 		}
 	}
 }
-
-#endif  /* __PROJECT_TL_SWITCH__ */

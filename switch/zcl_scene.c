@@ -23,9 +23,6 @@
  *
  *******************************************************************************************************/
 
-#if (__PROJECT_TL_SWITCH__)
-
-
 /**********************************************************************
  * INCLUDES
  */
@@ -128,5 +125,3 @@ status_t switch_sceneCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmdPay
 
 	return status;
 }
-
-#endif  /* __PROJECT_TL_SWITCH__ */

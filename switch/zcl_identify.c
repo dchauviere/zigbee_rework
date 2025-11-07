@@ -1,5 +1,3 @@
-#if (__PROJECT_TL_SWITCH__)
-
 /**********************************************************************
  * INCLUDES
  */
@@ -149,5 +147,3 @@ status_t switch_identifyCb(zclIncomingAddrInfo_t *pAddrInfo, u8 cmdId, void *cmd
 
 	return ZCL_STA_SUCCESS;
 }
-
-#endif

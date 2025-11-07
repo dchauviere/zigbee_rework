@@ -23,8 +23,6 @@
  *
  *******************************************************************************************************/
 
-#if (__PROJECT_TL_SWITCH__)
-
 /**********************************************************************
  * INCLUDES
  */
@@ -330,5 +328,3 @@ void registerAllZCL(void) {
 		zcl_register(ENDPOINT_3, ENDPOINT_3_CB_CLUSTER_NUM, (zcl_specClusterInfo_t *)endpoint3SpecClusterInfo);
 #endif
 	}
-
-#endif	/* __PROJECT_TL_SWITCH__ */

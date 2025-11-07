@@ -1,5 +1,3 @@
-#if (__PROJECT_TL_SWITCH__)
-
 /**********************************************************************
  * INCLUDES
  */
@@ -323,5 +321,3 @@ nv_sts_t restoreRelayConfig(u8 relay)
 
 	return st;
 }
-
-#endif

@@ -7,6 +7,10 @@ cmake_minimum_required(VERSION 3.25)
 
 SET(TARGET bootloader)
 
+if(NOT DEFINED BOARD)
+    set(BOARD "TS0012")
+endif()
+
 # ADD_DEFINITIONS
 add_compile_definitions(
     MCU_CORE_${TELINK_PLATFORM}=1
