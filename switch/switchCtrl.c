@@ -194,13 +194,13 @@ void switchesHandler(void){
 	static u32 resetTime = 0x00;
 	static u32 keyPressedTime = 0x00;
 	static u32 actionTime = 0x00;
-	static u8  state =APP_STATE_IDLE;
+	static u8  state = APP_STATE_IDLE;
 
 	if (state == APP_STATE_ACTION_CLICKS && clock_time_exceed(actionTime, g_globalConfig.actionclickTransition*1000)){
 		printf("Action clicks nbClicks=%d\n", nbClicks);
 		app_processClicks(valid_keyCode, nbClicks);
 		state = APP_STATE_IDLE;
-  		nbClicks = 0;
+  	nbClicks = 0;
 	} else if (state == APP_STATE_WAIT_KEY_MODE && clock_time_exceed(keyPressedTime, g_globalConfig.actionHoldThreshold*1000)) {
 		state = APP_STATE_ACTION_HOLD;
 		app_processHold(valid_keyCode);
@@ -229,9 +229,9 @@ void switchesHandler(void){
 			// Key Released
 			printf("key released\n");
 			if (clock_time_exceed(resetTime, g_globalConfig.resetDuration*1000*1000)){
-    	  		// Factory Reset
-			  	printf("factory reset\n");
-			  	zb_factoryReset();  
+    	  // Factory Reset
+			  printf("factory reset\n");
+			  zb_factoryReset();  
 			}
 			
 			if (state == APP_STATE_WAIT_KEY_MODE) { 
