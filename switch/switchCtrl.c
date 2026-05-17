@@ -80,6 +80,7 @@ void initSwitches(void) {
 }
 
 void app_processMomentary(u8 btn, bool released) {
+	u8 cmd;
 	epInfo_t dstEpInfo;
 	TL_SETSTRUCTCONTENT(dstEpInfo, 0);
 
@@ -89,28 +90,32 @@ void app_processMomentary(u8 btn, bool released) {
 	switch(g_switchAttr[btn].switchAction){
 		case ZCL_SWITCH_ACTION_ON_OFF:
 			if (released) {
-				setRelay(btn, ZCL_CMD_ONOFF_OFF);
+				cmd = ZCL_CMD_ONOFF_OFF;
 				zcl_onOff_offCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE);
 			} else {
-				setRelay(btn, ZCL_CMD_ONOFF_ON);
+				cmd = ZCL_CMD_ONOFF_ON;
 				zcl_onOff_onCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE);
 			}
 			break;
 		case ZCL_SWITCH_ACTION_OFF_ON:
 			if (released) {
-				setRelay(btn, ZCL_CMD_ONOFF_ON);
+				cmd = ZCL_CMD_ONOFF_ON;
 				zcl_onOff_onCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE);
 			} else {
-				setRelay(btn, ZCL_CMD_ONOFF_OFF);
+				cmd = ZCL_CMD_ONOFF_OFF;
 				zcl_onOff_offCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE);
 			}
 			break;
 		case ZCL_SWITCH_ACTION_TOGGLE:
-			if (g_switchAttr[btn].relayControlMode == ZCL_RELAY_CONTROL_MODE_TOGGLE) {
-				setRelay(btn, ZCL_CMD_ONOFF_TOGGLE);
-			}
+				cmd = ZCL_CMD_ONOFF_TOGGLE;
 				zcl_onOff_toggleCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE);
 			break;
+		default:
+			printf("unknown switch command");
+			return;
+	}
+	if (g_switchAttr[btn].relayControlMode == ZCL_RELAY_CONTROL_MODE_TOGGLE) {
+		setRelay(btn, cmd);
 	}
 }
 
@@ -231,7 +236,7 @@ void switchesHandler(void){
 			if (clock_time_exceed(resetTime, g_globalConfig.resetDuration*1000*1000)){
     	  // Factory Reset
 			  printf("factory reset\n");
-			  zb_factoryReset();  
+			  zb_factoryReset();
 			}
 			
 			if (state == APP_STATE_WAIT_KEY_MODE) { 
@@ -274,7 +279,8 @@ nv_sts_t saveSwitchConfig(u8 sw)
 	if(st == NV_SUCC){
 		if ((l_switchAttr.transitionTime != g_switchAttr[sw].transitionTime)
 		|| (l_switchAttr.switchAction != g_switchAttr[sw].switchAction)
-		|| (l_switchAttr.switchMode != g_switchAttr[sw].switchMode) ){
+		|| (l_switchAttr.switchMode != g_switchAttr[sw].switchMode) 
+		|| (l_switchAttr.relayControlMode != g_switchAttr[sw].relayControlMode)) {
 			changed = true;
 		}
 	}
@@ -307,10 +313,12 @@ nv_sts_t restoreSwitchConfig(u8 sw)
 		g_switchAttr[sw].transitionTime	= l_switchAttr.transitionTime;
 		g_switchAttr[sw].switchAction = l_switchAttr.switchAction;
 		g_switchAttr[sw].switchMode = l_switchAttr.switchMode;
+		g_switchAttr[sw].relayControlMode = l_switchAttr.relayControlMode;
 	}else{
 		g_switchAttr[sw].transitionTime = 0x0A;
 		g_switchAttr[sw].switchAction = ZCL_SWITCH_ACTION_ON_OFF;
 		g_switchAttr[sw].switchMode = ZCL_SWITCH_TYPE_TOGGLE;
+		g_switchAttr[sw].relayControlMode = ZCL_RELAY_CONTROL_MODE_TOGGLE;
 	}
 
 	return st;

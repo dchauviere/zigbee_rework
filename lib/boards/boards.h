@@ -5,6 +5,8 @@
 	#include "../boards/board_ts0012.h"
 #elif (BOARD_TS0013)
 	#include "../boards/board_ts0013.h"
+#elif (BOARD_SANDWITCH)
+	#include "../boards/board_sandwitch.h"
 #endif
 
 #if defined(MCU_CORE_826x)

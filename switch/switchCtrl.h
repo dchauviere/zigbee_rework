@@ -52,6 +52,8 @@ typedef struct{
 	u8 switchMode;
 	u8 switchAction;
 	u8 relayControlMode;
+	u8 relayAttached;
+	u8 triggerMode;
 }switchAttr_t;
 
 extern switchAttr_t g_switchAttr[BUTTON_NUM];

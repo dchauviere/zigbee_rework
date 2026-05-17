@@ -159,19 +159,19 @@ void user_app_init(void)
 
 	af_nodeDescManuCodeUpdate(MANUFACTURER_CODE_TELINK);
 
-    /* Initialize ZCL layer */
+  /* Initialize ZCL layer */
 	/* Register Incoming ZCL Foundation command/response messages */
 	zcl_init(switch_zclProcessIncomingMsg);
+
+	zcl_reportingTabInit();
 
 	/* register endPoint */
 	registerAllEndpoints();
 
-	zcl_reportingTabInit();
-
 	/* Register ZCL specific cluster information */
 	registerAllZCL();
 
-    ota_init(OTA_TYPE_CLIENT, (af_simple_descriptor_t *)&endpoint_simpleDesc, &switch_otaInfo, &switch_otaCb);
+  ota_init(OTA_TYPE_CLIENT, (af_simple_descriptor_t *)&endpoint_simpleDesc, &switch_otaInfo, &switch_otaCb);
 }
 
 s32 sampleSwitchAttrsStoreTimerCb(void *arg)
@@ -259,11 +259,12 @@ void user_init(bool isRetention)
 
 		bdb_findBindMatchClusterSet(FIND_AND_BIND_CLUSTER_NUM, bdb_findBindClusterList);
 
-	    /* Set default reporting configuration */
-    	u8 reportableChange = 0x00;
+	  /* Set default reporting configuration */
+    u8 reportableChange[BUTTON_NUM];
 		for(u8 ep=1;ep<=BUTTON_NUM;ep++){
+			reportableChange[ep-1] = 0x00;
 			bdb_defaultReportingCfg(ep, HA_PROFILE_ID, ZCL_CLUSTER_GEN_ON_OFF, ZCL_ATTRID_ONOFF,
-    						0x0000, 0x003c, (u8 *)&reportableChange);
+    						0x0000, 0x003c, (u8 *)&reportableChange[ep-1]);
 		}
 
 		/* Initialize BDB */
