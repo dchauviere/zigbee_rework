@@ -1,5 +1,8 @@
 /* Board ID */
 
+
+/* Default values */
+
 /* Board include */
 #if (BOARD_TS0012)
 	#include "../boards/board_ts0012.h"
@@ -7,6 +10,9 @@
 	#include "../boards/board_ts0013.h"
 #elif (BOARD_SANDWITCH)
 	#include "../boards/board_sandwitch.h"
+#else
+	#define BUTTON_NUM 1
+	#define RELAYS_NUM 1
 #endif
 
 #if defined(MCU_CORE_826x)

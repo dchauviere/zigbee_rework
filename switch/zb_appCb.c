@@ -35,7 +35,7 @@
 #include "zclApp.h"
 #include "switchApp.h"
 #include "zb_appCb.h"
-#include "backlightCtrl.h"
+#include "backlight.h"
 
 /**********************************************************************
  * LOCAL CONSTANTS

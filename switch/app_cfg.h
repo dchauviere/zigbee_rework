@@ -110,7 +110,7 @@ extern "C" {
 typedef enum{
 	EV_POLL_ED_DETECT,
 	EV_POLL_HCI,
-    EV_POLL_IDLE,
+  EV_POLL_IDLE,
 	EV_POLL_MAX,
 }ev_poll_e;
 

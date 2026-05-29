@@ -8,6 +8,14 @@
 #include "endpointCfg.h"
 #include "zclApp.h"
 
+/**********************************************************************
+ * GLOBAL VARIABLES
+ */
+zcl_groupAttr_t g_zcl_groupAttrs =
+{
+	.nameSupport	= 0,
+};
+
 /*********************************************************************
  * @fn      switch_zclAddGroupRspCmdHandler
  *

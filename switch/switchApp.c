@@ -31,14 +31,13 @@
 #include "zcl_include.h"
 #include "bdb.h"
 #include "ota.h"
-#include "globalConfig.h"
 #include "zclApp.h"
 #include "switchApp.h"
 #include "switchCtrl.h"
 #include "endpointCfg.h"
 #include "zb_appCb.h"
 #include "relayCtrl.h"
-#include "backlightCtrl.h"
+#include "backlight.h"
 
 
 /**********************************************************************
@@ -166,21 +165,21 @@ void user_app_init(void)
 	zcl_reportingTabInit();
 
 	/* register endPoint */
-	registerAllEndpoints();
+	for (u8 endpoint=1;endpoint<=BUTTON_NUM;endpoint++) {
+		registerEndpoint(endpoint);
+	}
 
 	/* Register ZCL specific cluster information */
-	registerAllZCL();
+	for (u8 endpoint=1;endpoint<=BUTTON_NUM;endpoint++) {
+		registerZCL(endpoint);
+	}
 
-  ota_init(OTA_TYPE_CLIENT, (af_simple_descriptor_t *)&endpoint_simpleDesc, &switch_otaInfo, &switch_otaCb);
+  ota_init(OTA_TYPE_CLIENT, (af_simple_descriptor_t *)&g_simpleDescs[0], &switch_otaInfo, &switch_otaCb);
 }
 
 s32 sampleSwitchAttrsStoreTimerCb(void *arg)
 {
-	saveGlobalConfig();
-	for (u8 b=0;b<BUTTON_NUM;b++) {
-		saveRelayConfig(b);
-		saveSwitchConfig(b);	
-	}
+	saveAllAttrsToNVRAM();
 
 	sampleSwitchAttrsStoreTimerEvt = NULL;
 	return -1;
@@ -215,11 +214,7 @@ void app_task(void)
 
 static void sampleSwitchSysException(void)
 {
-	saveGlobalConfig();
-	for (u8 b=0;b<BUTTON_NUM;b++) {
-		saveRelayConfig(b);
-		saveSwitchConfig(b);	
-	}
+	saveAllAttrsToNVRAM();
 	SYSTEM_RESET();
 }
 
@@ -234,9 +229,10 @@ static void sampleSwitchSysException(void)
  */
 void user_init(bool isRetention)
 {
-	restoreGlobalConfig();
+	restoreAllAttrsFromNVRAM();
 	initRelays();
 	initSwitches();
+	
 
 	if(!isRetention){
 		/* Initialize Stack */
@@ -269,7 +265,7 @@ void user_init(bool isRetention)
 
 		/* Initialize BDB */
 		u8 repower = drv_pm_deepSleep_flag_get() ? 0 : 1;
-		bdb_init((af_simple_descriptor_t *)&endpoint_simpleDesc, &g_bdbCommissionSetting, &g_zbDemoBdbCb, repower);
+		bdb_init((af_simple_descriptor_t *)&g_simpleDescs[0], &g_bdbCommissionSetting, &g_zbDemoBdbCb, repower);
 	}else{
 		/* Re-config phy when system recovery from deep sleep with retention */
 		mac_phyReconfig();

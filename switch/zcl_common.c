@@ -31,7 +31,7 @@
 #include "zcl_include.h"
 #include "endpointCfg.h"
 #include "zclApp.h"
-#include "backlightCtrl.h"
+#include "backlight.h"
 
 
 /**********************************************************************
@@ -183,14 +183,26 @@ static void switch_zclCfgReportRspCmd(u16 clusterId, zclCfgReportRspCmd_t *pCfgR
  */
 static void switch_zclReportCmd(u8 endpoint, u16 clusterId, zclReportCmd_t *pReportCmd)
 {
-	for (u8 i=0;i<pReportCmd->numAttr;i++){
-		if (pReportCmd->attrList[i].attrID == ZCL_ATTRID_ONOFF) {
-			u8 state = pReportCmd->attrList[i].attrData[0];
-			if (state) {
-				setBacklightOn(getRelayFromEndpoint(endpoint));
-			}else{
-				setBacklightOff(getRelayFromEndpoint(endpoint));
-			}
-		}
+
+}
+
+
+void saveAllAttrsToNVRAM(void)
+{
+	saveGlobalConfig();
+	for (u8 b=0;b<BUTTON_NUM;b++) {
+		saveRelayConfig(b);
+		saveSwitchConfig(b);	
+		saveEPConfig(b);
+	}
+}
+
+void restoreAllAttrsFromNVRAM(void)
+{
+	restoreGlobalConfig();
+	for (u8 b=0;b<BUTTON_NUM;b++) {
+		restoreRelayConfig(b);
+		restoreSwitchConfig(b);	
+		restoreEPConfig(b);
 	}
 }

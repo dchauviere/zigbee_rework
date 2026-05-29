@@ -26,37 +26,6 @@
 #ifndef __SWITCH_CTRL_H__
 #define __SWITCH_CTRL_H__
 
-/**********************************************************************
- * CONSTANT
- */
-
-#define NV_ITEM_APP_SWITCH_BASE 			0x50
-
-#define ZCL_SWITCH_TYPE_TOGGLE                  0x00
-#define ZCL_SWITCH_TYPE_MOMENTARY               0x01
-#define ZCL_SWITCH_TYPE_MULTIFUNCTION           0x02
-
-#define ZCL_SWITCH_ACTION_ON_OFF                0x00
-#define ZCL_SWITCH_ACTION_OFF_ON                0x01
-#define ZCL_SWITCH_ACTION_TOGGLE                0x02
-
-#define ZCL_RELAY_CONTROL_MODE_OFF              0x00
-#define ZCL_RELAY_CONTROL_MODE_TOGGLE           0x01
-
-/**********************************************************************
- * TYPEDEFS
- */
-
-typedef struct{
-	u16 transitionTime;
-	u8 switchMode;
-	u8 switchAction;
-	u8 relayControlMode;
-	u8 relayAttached;
-	u8 triggerMode;
-}switchAttr_t;
-
-extern switchAttr_t g_switchAttr[BUTTON_NUM];
 
 /**********************************************************************
  * FUNCTIONS
@@ -64,7 +33,5 @@ extern switchAttr_t g_switchAttr[BUTTON_NUM];
 
 void initSwitches(void);
 void switchesHandler(void);
-nv_sts_t saveSwitchConfig(u8 sw);
-nv_sts_t restoreSwitchConfig(u8 sw);
 
 #endif	/* __BUTTON_CTRL_H__ */

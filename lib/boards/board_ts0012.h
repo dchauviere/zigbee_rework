@@ -73,6 +73,7 @@ extern "C" {
 #define PB5_OUTPUT_ENABLE			1
 #define PB5_INPUT_ENABLE			0
 
+#define GET_RELAY_PIN(i) ((u8[]){ RELAY1, RELAY2 }[(i)])
 #define RELAYS_NUM					2
 
 // LED
@@ -88,7 +89,8 @@ extern "C" {
 #define PD3_OUTPUT_ENABLE			1
 #define PD3_INPUT_ENABLE			0
 
-#define LEDS_NUM                    2
+#define GET_BACKLIGHT_PIN(i) ((u8[]){ LED1, LED2 }[(i)])
+#define BACKLIGHTS_NUM                    2
 
 #define LED_POWER					LED1
 

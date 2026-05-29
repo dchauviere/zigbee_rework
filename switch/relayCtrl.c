@@ -7,22 +7,14 @@
 #include "zclApp.h"
 #include "switchApp.h"
 #include "relayCtrl.h"
-#include "backlightCtrl.h"
+#include "backlight.h"
 
-const u16 RELAYS_PIN[] = {
-	RELAY1, 
-#if RELAYS_NUM > 1
-	RELAY2, 
-#endif
-#if RELAYS_NUM > 2
-	RELAY3
-#endif
-};
 
 #define ZCL_ONOFF_TIMER_INTERVAL		100    //the timer interval to change the offWaitTime/onTime attribute of the ONOFF cluster
 static ev_timer_event_t *onWithTimedOffTimerEvt = NULL;
 
 relayAttr_t g_relayAttr[RELAYS_NUM];
+
 
 /*********************************************************************
  * @fn      initRelays
@@ -36,7 +28,6 @@ relayAttr_t g_relayAttr[RELAYS_NUM];
 void initRelays(void)
 {
 	for(u8 r=0;r<RELAYS_NUM;r++){
-		restoreRelayConfig(r);
 		refreshRelay(r);
 	}
 }
@@ -52,7 +43,7 @@ void initRelays(void)
  */
 void setHardwareRelay(u8 relay, bool state)
 {
-	drv_gpio_write(RELAYS_PIN[relay], (u8)state);
+	drv_gpio_write(GET_RELAY_PIN(relay), (u8)state);
 }
 
 /*********************************************************************
@@ -66,21 +57,21 @@ void setHardwareRelay(u8 relay, bool state)
  */
 
  void refreshRelay(u8 relay) {
-    u8 relayState = (u8)g_relayAttr[relay].onOff;
+  u8 relayState = (u8)g_relayAttr[relay].onOff;
 	bool backlightState = true;
     
 	setHardwareRelay(relay, relayState);
 	switch(g_relayAttr[relay].backlightMode) {
-		case ZCL_ONOFF_BACKLIGHT_MODE_ON:
+		case ZCL_EPCONFIG_BACKLIGHT_MODE_ON:
 			backlightState = true;
 			break;
-		case ZCL_ONOFF_BACKLIGHT_MODE_OFF:
+		case ZCL_EPCONFIG_BACKLIGHT_MODE_OFF:
 			backlightState = false;
 			break;
-		case ZCL_ONOFF_BACKLIGHT_MODE_ONOFF:
+		case ZCL_EPCONFIG_BACKLIGHT_MODE_ONOFF:
 			backlightState = relayState;
 			break;
-		case ZCL_ONOFF_BACKLIGHT_MODE_OFFON:
+		case ZCL_EPCONFIG_BACKLIGHT_MODE_OFFON:
 			backlightState = !relayState;
 			break;
 	}
@@ -124,7 +115,7 @@ void setRelay(u8 relay, u8 cmd)
 		pOnOff->onTime = 0;
 	}
 
-	zcl_sceneAttr_t *pScene = zcl_sceneAttrGet();
+	zcl_sceneAttr_t *pScene = &g_zcl_sceneAttrs;
 	pScene->sceneValid = 0;
 
 	refreshRelay(relay);
@@ -304,19 +295,20 @@ nv_sts_t restoreRelayConfig(u8 relay)
 	st = nv_flashReadNew(1, NV_MODULE_ZCL,  NV_ITEM_APP_ON_OFF_BASE + relay, sizeof(relayAttr_t), (u8*)&l_relayAttr);
 
 	if(st == NV_SUCC){
-			g_relayAttr[relay].onOff				= l_relayAttr.onOff;
-			g_relayAttr[relay].globalSceneControl	= l_relayAttr.globalSceneControl;
-			g_relayAttr[relay].onTime				= l_relayAttr.onTime;
-			g_relayAttr[relay].offWaitTime			= l_relayAttr.offWaitTime;
-			g_relayAttr[relay].startUpOnOff 		= l_relayAttr.startUpOnOff;
-			g_relayAttr[relay].backlightMode 		= l_relayAttr.backlightMode;
+		g_relayAttr[relay].onOff				      = l_relayAttr.onOff;
+		g_relayAttr[relay].globalSceneControl	= l_relayAttr.globalSceneControl;
+		g_relayAttr[relay].onTime				      = l_relayAttr.onTime;
+		g_relayAttr[relay].offWaitTime			  = l_relayAttr.offWaitTime;
+		g_relayAttr[relay].startUpOnOff 		  = l_relayAttr.startUpOnOff;
+		g_relayAttr[relay].backlightMode 		  = l_relayAttr.backlightMode;
 	}else{
-			g_relayAttr[relay].onOff				= 0x00;
-			g_relayAttr[relay].globalSceneControl	= 1;
-			g_relayAttr[relay].onTime				= 0x0000;
-			g_relayAttr[relay].offWaitTime			= 0x0000;
-			g_relayAttr[relay].startUpOnOff 		= ZCL_START_UP_ONOFF_SET_ONOFF_TO_ON;
-			g_relayAttr[relay].backlightMode		= ZCL_ONOFF_BACKLIGHT_MODE_ONOFF;
+		g_relayAttr[relay].onOff				      = 0x00;
+		g_relayAttr[relay].globalSceneControl	= 1;
+		g_relayAttr[relay].onTime				      = 0x0000;
+		g_relayAttr[relay].offWaitTime			  = 0x0000;
+		g_relayAttr[relay].startUpOnOff 		  = ZCL_START_UP_ONOFF_SET_ONOFF_TO_OFF;
+		g_relayAttr[relay].backlightMode		  = ZCL_EPCONFIG_BACKLIGHT_MODE_ONOFF;
+		st = nv_flashWriteNew(1, NV_MODULE_ZCL, NV_ITEM_APP_ON_OFF_BASE + relay, sizeof(relayAttr_t), (u8*)&g_relayAttr[relay]);
 	}
 
 	return st;

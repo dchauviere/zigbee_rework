@@ -33,7 +33,6 @@
 #include "endpointCfg.h"
 #include "relayCtrl.h"
 #include "zclApp.h"
-#include "globalConfig.h"
 #include "switchApp.h"
 #include "switchCtrl.h"
 
@@ -41,7 +40,6 @@
 /**********************************************************************
  * GLOBAL VARIABLES
  */
-switchAttr_t g_switchAttr[BUTTON_NUM];
 
 
 /**********************************************************************
@@ -75,7 +73,6 @@ void initSwitches(void) {
 	for(u8 sw=0;sw<BUTTON_NUM;sw++) {
 		l_switchState[sw].dir = true;
 		l_switchState[sw].level = 1;
-		restoreSwitchConfig(sw);
 	}
 }
 
@@ -114,7 +111,7 @@ void app_processMomentary(u8 btn, bool released) {
 			printf("unknown switch command");
 			return;
 	}
-	if (g_switchAttr[btn].relayControlMode == ZCL_RELAY_CONTROL_MODE_TOGGLE) {
+	if (g_epConfigAttrs[btn].relayMode == ZCL_EPCONFIG_RELAY_MODE_ATTACHED) {
 		setRelay(btn, cmd);
 	}
 }
@@ -126,7 +123,7 @@ void app_processToggle(u8 btn) {
 	dstEpInfo.profileId = HA_PROFILE_ID;
 	dstEpInfo.dstAddrMode = APS_DSTADDR_EP_NOTPRESETNT;
 
-	if (g_switchAttr[btn].relayControlMode == ZCL_RELAY_CONTROL_MODE_TOGGLE) {
+	if (g_epConfigAttrs[btn].relayMode == ZCL_EPCONFIG_RELAY_MODE_ATTACHED) {
 		setRelay(btn, ZCL_CMD_ONOFF_TOGGLE);
 	}
 	zcl_onOff_toggleCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE);
@@ -184,6 +181,9 @@ void app_processClicks(u8 btn, u8 nbClicks) {
     	  	// Factory Reset
 			printf("factory reset\n");
 			zb_factoryReset();
+			wd_set_interval_ms(1);
+			wd_start();
+			while(1);
     	} else {
 			printf("action with %d clicks not implemented", nbClicks);
 		}
@@ -237,6 +237,9 @@ void switchesHandler(void){
     	  // Factory Reset
 			  printf("factory reset\n");
 			  zb_factoryReset();
+				wd_set_interval_ms(1);
+				wd_start();
+				while(1);
 			}
 			
 			if (state == APP_STATE_WAIT_KEY_MODE) { 
@@ -255,71 +258,4 @@ void switchesHandler(void){
 			}
 		}
 	}
-}
-
-
-/*********************************************************************
- * @fn      saveSwitchConfig
- *
- * @brief
- *
- * @param   None
- *
- * @return
- */
-nv_sts_t saveSwitchConfig(u8 sw)
-{
-	nv_sts_t st = NV_SUCC;
-	bool changed = false;
-
-	switchAttr_t l_switchAttr;
-
-	st = nv_flashReadNew(1, NV_MODULE_ZCL, NV_ITEM_APP_SWITCH_BASE + sw, sizeof(switchAttr_t), (u8*)&l_switchAttr);
-
-	if(st == NV_SUCC){
-		if ((l_switchAttr.transitionTime != g_switchAttr[sw].transitionTime)
-		|| (l_switchAttr.switchAction != g_switchAttr[sw].switchAction)
-		|| (l_switchAttr.switchMode != g_switchAttr[sw].switchMode) 
-		|| (l_switchAttr.relayControlMode != g_switchAttr[sw].relayControlMode)) {
-			changed = true;
-		}
-	}
-
-	if (changed == true || st == NV_ITEM_NOT_FOUND) {
-		st = nv_flashWriteNew(1, NV_MODULE_ZCL, NV_ITEM_APP_SWITCH_BASE + sw, sizeof(switchAttr_t), (u8*)&g_switchAttr[sw]);
-	}
-
-	return st;
-}
-
-/*********************************************************************
- * @fn      restoreSwitchConfig
- *
- * @brief
- *
- * @param   None
- *
- * @return
- */
-nv_sts_t restoreSwitchConfig(u8 sw)
-{
-	nv_sts_t st = NV_SUCC;
-
-	switchAttr_t l_switchAttr;
-
-	st = nv_flashReadNew(1, NV_MODULE_ZCL,  NV_ITEM_APP_SWITCH_BASE + sw, sizeof(switchAttr_t), (u8*)&l_switchAttr);
-
-	if(st == NV_SUCC){
-		g_switchAttr[sw].transitionTime	= l_switchAttr.transitionTime;
-		g_switchAttr[sw].switchAction = l_switchAttr.switchAction;
-		g_switchAttr[sw].switchMode = l_switchAttr.switchMode;
-		g_switchAttr[sw].relayControlMode = l_switchAttr.relayControlMode;
-	}else{
-		g_switchAttr[sw].transitionTime = 0x0A;
-		g_switchAttr[sw].switchAction = ZCL_SWITCH_ACTION_ON_OFF;
-		g_switchAttr[sw].switchMode = ZCL_SWITCH_TYPE_TOGGLE;
-		g_switchAttr[sw].relayControlMode = ZCL_RELAY_CONTROL_MODE_TOGGLE;
-	}
-
-	return st;
 }

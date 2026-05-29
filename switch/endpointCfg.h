@@ -14,25 +14,13 @@
 #define getEndpointFromRelay(x)                 (x + 1)
 #define getEndpointFromSwitch(x)                (x + 1)
 
-#define ZCL_ATTRID_SWITCH_TYPE          0x0000
-#define ZCL_ATTRID_SWITCH_ACTION		0x0010
-
-#define ZCL_ONOFF_BACKLIGHT_MODE_ON             0x00
-#define ZCL_ONOFF_BACKLIGHT_MODE_OFF            0x01
-#define ZCL_ONOFF_BACKLIGHT_MODE_ONOFF          0x02
-#define ZCL_ONOFF_BACKLIGHT_MODE_OFFON          0x03
-
-#define ZCL_ONOFF_ON_SWITCH_TRIGGER_UNLINKED    0x00
-#define ZCL_ONOFF_ON_SWITCH_TRIGGER_FRONT       0x01
-#define ZCL_ONOFF_ON_SWITCH_TRIGGER_SINGLE      0x02
-
 /**
  *  @brief Defined for on/off cluster attributes
  */
 
-const af_simple_descriptor_t endpoint_simpleDesc;
+af_simple_descriptor_t g_simpleDescs[BUTTON_NUM];
 
-void registerAllEndpoints(void);
-void registerAllZCL(void);
+void registerEndpoint(u8 endpoint);
+void registerZCL(u8 endpoint);
 
 #endif

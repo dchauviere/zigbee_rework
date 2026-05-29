@@ -7,25 +7,32 @@
 #include "endpointCfg.h"
 #include "zclApp.h"
 
+
+/* Identify */
+zcl_identifyAttr_t g_zcl_identifyAttrs[BUTTON_NUM];
+
+
 /**********************************************************************
  * LOCAL VARIABLES
  */
-static ev_timer_event_t *identifyTimerEvt = NULL;
+static ev_timer_event_t *identifyTimerEvt[BUTTON_NUM];
+
 
 s32 switch_zclIdentifyTimerCb(void *arg)
 {
-	if(g_zcl_identifyAttrs.identifyTime <= 0){
-		identifyTimerEvt = NULL;
+	u8 endpoint = *(u8 *)arg;
+	if(g_zcl_identifyAttrs[endpoint-1].identifyTime <= 0){
+		identifyTimerEvt[endpoint-1] = NULL;
 		return -1;
 	}
-	g_zcl_identifyAttrs.identifyTime--;
+	g_zcl_identifyAttrs[endpoint-1].identifyTime--;
 	return 0;
 }
 
-void switch_zclIdentifyTimerStop(void)
+void switch_zclIdentifyTimerStop(u8 endpoint)
 {
-	if(identifyTimerEvt){
-		TL_ZB_TIMER_CANCEL(&identifyTimerEvt);
+	if(identifyTimerEvt[endpoint-1]){
+		TL_ZB_TIMER_CANCEL(&identifyTimerEvt[endpoint-1]);
 	}
 }
 
@@ -42,15 +49,15 @@ void switch_zclIdentifyTimerStop(void)
  */
 void switch_zclIdentifyCmdHandler(u8 endpoint, u16 srcAddr, u16 identifyTime)
 {
-	g_zcl_identifyAttrs.identifyTime = identifyTime;
+	g_zcl_identifyAttrs[endpoint-1].identifyTime = identifyTime;
 
 	if(identifyTime == 0){
-		switch_zclIdentifyTimerStop();
+		switch_zclIdentifyTimerStop(endpoint);
 		stopBacklightBlink(getRelayFromEndpoint(endpoint));
 	}else{
-		if(!identifyTimerEvt){
+		if(!identifyTimerEvt[endpoint-1]){
 			startBacklightBlink(getRelayFromEndpoint(endpoint), identifyTime, 500, 500);
-			identifyTimerEvt = TL_ZB_TIMER_SCHEDULE(switch_zclIdentifyTimerCb, NULL, 1000);
+			identifyTimerEvt[endpoint-1] = TL_ZB_TIMER_SCHEDULE(switch_zclIdentifyTimerCb, (void *)endpoint, 1000);
 		}
 	}
 }

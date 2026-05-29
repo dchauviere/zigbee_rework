@@ -34,6 +34,14 @@
 #include "switchApp.h"
 #include "relayCtrl.h"
 
+zcl_sceneAttr_t g_zcl_sceneAttrs =
+{
+	.sceneCount		= 0,
+	.currentScene	= 0,
+	.currentGroup	= 0x0000,
+	.sceneValid		= FALSE,
+	.nameSupport	= 0,
+};
 
 /*********************************************************************
  * @fn      switch_sceneRecallReqHandler
