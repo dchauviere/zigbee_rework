@@ -139,7 +139,7 @@ nv_sts_t restoreEPConfig(u8 endpoint);
 #define GLOBAL_DEFAULT_ACTION_HOLD_STEP         50
 #define GLOBAL_DEFAULT_ACTION_CLICK_TRANSITION  500
 #define GLOBAL_DEFAULT_IDENTIFY_DURATION        10
-#define GLOBAL_DEFAULT_RESET_DURATION           30
+#define GLOBAL_DEFAULT_RESET_DURATION           10
 
 typedef struct {
   u8 resetDuration;           // duration in seconds waiting for reset

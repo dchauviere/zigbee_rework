@@ -136,6 +136,7 @@ ev_timer_event_t *sampleSwitchAttrsStoreTimerEvt = NULL;
  */
 void stack_init(void)
 {
+	printf("stack init\n");
 	/* Initialize ZB stack */
 	zb_init();
 
@@ -154,6 +155,7 @@ void stack_init(void)
  */
 void user_app_init(void)
 {
+	printf("user app init\n");
 	af_powerDescPowerModeUpdate(POWER_MODE_RECEIVER_COMES_WHEN_STIMULATED);
 
 	af_nodeDescManuCodeUpdate(MANUFACTURER_CODE_TELINK);
@@ -229,6 +231,8 @@ static void sampleSwitchSysException(void)
  */
 void user_init(bool isRetention)
 {
+	printf("user init, isRetention: %d\n", isRetention);
+
 	restoreAllAttrsFromNVRAM();
 	initRelays();
 	initSwitches();

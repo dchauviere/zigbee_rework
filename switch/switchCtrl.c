@@ -127,6 +127,20 @@ void app_processToggle(u8 btn) {
 		setRelay(btn, ZCL_CMD_ONOFF_TOGGLE);
 	}
 	zcl_onOff_toggleCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE);
+
+	if (g_epConfigAttrs[btn].simpleClickDevice == 0xFFFE) {
+		printf("no simple click device configured\n");
+		return;
+	}
+	epInfo_t dst;
+	TL_SETSTRUCTCONTENT(dst, 0);
+  dst.profileId = HA_PROFILE_ID;
+  dst.dstAddrMode = APS_SHORT_DSTADDR_WITHEP;
+  dst.dstAddr.shortAddr = g_epConfigAttrs[btn].simpleClickDevice;
+  dst.dstEp = 1;
+  dst.txOptions = APS_TX_OPT_ACK_TX;
+  dst.radius = 30;
+	printf("send toggle to 0x%04x\n", dst.dstAddr.shortAddr);
 }
 
 void app_processDblClick(u8 btn) {
@@ -181,9 +195,9 @@ void app_processClicks(u8 btn, u8 nbClicks) {
     	  	// Factory Reset
 			printf("factory reset\n");
 			zb_factoryReset();
-			wd_set_interval_ms(1);
-			wd_start();
-			while(1);
+			//wd_set_interval_ms(1);
+			//wd_start();
+			//while(1);
     	} else {
 			printf("action with %d clicks not implemented", nbClicks);
 		}
@@ -237,9 +251,9 @@ void switchesHandler(void){
     	  // Factory Reset
 			  printf("factory reset\n");
 			  zb_factoryReset();
-				wd_set_interval_ms(1);
-				wd_start();
-				while(1);
+				//wd_set_interval_ms(1);
+				//wd_start();
+				//while(1);
 			}
 			
 			if (state == APP_STATE_WAIT_KEY_MODE) { 

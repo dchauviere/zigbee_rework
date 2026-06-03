@@ -58,24 +58,24 @@ void setHardwareRelay(u8 relay, bool state)
 
  void refreshRelay(u8 relay) {
   u8 relayState = (u8)g_relayAttr[relay].onOff;
-	bool backlightState = true;
+	enum backlightState state;
     
 	setHardwareRelay(relay, relayState);
-	switch(g_relayAttr[relay].backlightMode) {
+	switch(g_epConfigAttrs[relay].backlightMode) {
 		case ZCL_EPCONFIG_BACKLIGHT_MODE_ON:
-			backlightState = true;
+			state = BACKLIGHT_ON;
 			break;
 		case ZCL_EPCONFIG_BACKLIGHT_MODE_OFF:
-			backlightState = false;
+			state = BACKLIGHT_OFF;
 			break;
 		case ZCL_EPCONFIG_BACKLIGHT_MODE_ONOFF:
-			backlightState = relayState;
+			state = relayState ? BACKLIGHT_ON : BACKLIGHT_OFF;
 			break;
 		case ZCL_EPCONFIG_BACKLIGHT_MODE_OFFON:
-			backlightState = !relayState;
+			state = relayState ? BACKLIGHT_OFF : BACKLIGHT_ON;
 			break;
 	}
-	setBacklight(relay, backlightState);
+	setBacklight(relay, state);
 }
 
 /*********************************************************************

@@ -18,14 +18,20 @@ backlightInternalAttr_t g_backlightInternalAttrs[BACKLIGHTS_NUM];
  * @return  None
  */
 void setBacklight(u8 led, enum backlightState state) {
+	u32 pin = GET_BACKLIGHT_PIN(led);
+	printf("set backlight %d to %d\n", pin, state);
 	drv_gpio_write(GET_BACKLIGHT_PIN(led), (u8)state);
 }
 
 void setBacklightOn(u8 led) {
+	u32 pin = GET_BACKLIGHT_PIN(led);
+	printf("set backlight %d on\n", pin);
 	drv_gpio_write(GET_BACKLIGHT_PIN(led), (u8)BACKLIGHT_ON);
 }
 
 void setBacklightOff(u8 led) {
+	u32 pin = GET_BACKLIGHT_PIN(led);
+	printf("set backlight %d off\n", pin);
 	drv_gpio_write(GET_BACKLIGHT_PIN(led), (u8)BACKLIGHT_OFF);
 }
 

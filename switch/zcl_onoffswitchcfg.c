@@ -121,7 +121,7 @@ nv_sts_t restoreSwitchConfig(u8 sw)
 	}else{
 		g_switchAttr[sw].transitionTime = 0x0A;
 		g_switchAttr[sw].switchAction = ZCL_SWITCH_ACTION_ON_OFF;
-		g_switchAttr[sw].switchMode = ZCL_SWITCH_TYPE_TOGGLE;
+		g_switchAttr[sw].switchMode = ZCL_SWITCH_TYPE_MULTIFUNCTION;
 		st = nv_flashWriteNew(1, NV_MODULE_ZCL, NV_ITEM_APP_SWITCH_BASE + sw, sizeof(switchAttr_t), (u8*)&g_switchAttr[sw]);
 	}
 

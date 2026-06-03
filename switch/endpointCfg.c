@@ -171,7 +171,7 @@ void registerZCL(u8 endpoint) {
 	onOffSwitchCfg_attrTbl[0] = (zclAttrInfo_t) { ZCL_ATTRID_SWITCH_MODE,             ZCL_DATA_TYPE_ENUM8,  ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, (u8*)&g_switchAttr[endpoint-1].switchMode};
 	onOffSwitchCfg_attrTbl[1] = (zclAttrInfo_t) { ZCL_ATTRID_SWITCH_ACTION,           ZCL_DATA_TYPE_ENUM8,  ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, (u8*)&g_switchAttr[endpoint-1].switchAction};
 	onOffSwitchCfg_attrTbl[2] = (zclAttrInfo_t) { ZCL_ATTRID_GLOBAL_CLUSTER_REVISION, ZCL_DATA_TYPE_UINT16, ACCESS_CONTROL_READ,  							        (u8*)&zcl_attr_global_clusterRevision};
-	st = zcl_onOffSwitchCfg_register(endpoint, MANUFACTURER_CODE_NONE, sizeof(g_onOffSwitchCfg_tbls[endpoint-1]) / sizeof(zclAttrInfo_t), (zclAttrInfo_t *)g_onOffSwitchCfg_tbls[endpoint-1], switch_onOffSwitchCfgCb);
+	st = zcl_onOffSwitchCfg_register(endpoint, MANUFACTURER_CODE_TELINK, sizeof(g_onOffSwitchCfg_tbls[endpoint-1]) / sizeof(zclAttrInfo_t), (zclAttrInfo_t *)g_onOffSwitchCfg_tbls[endpoint-1], switch_onOffSwitchCfgCb);
 	if(st != ZCL_STA_SUCCESS) {
     printf("ERR: cluster 0x%04X registration failed (0x%02X)\n", ZCL_CLUSTER_EPCONFIG, st);
 	}

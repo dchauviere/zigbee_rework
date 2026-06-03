@@ -84,7 +84,7 @@ extern "C" {
 #define PD2_OUTPUT_ENABLE			1
 #define PD2_INPUT_ENABLE			0
 
-#define GET_RELAY_PIN(i) ((u8[]){ RELAY1, RELAY2, RELAY3 }[(i)])
+#define GET_RELAY_PIN(i) ((u32[]){ RELAY1, RELAY2, RELAY3 }[(i)])
 #define RELAYS_NUM 3
 
 // LED
@@ -106,7 +106,7 @@ extern "C" {
 #define PD7_OUTPUT_ENABLE			1
 #define PD7_INPUT_ENABLE			0
 
-#define GET_BACKLIGHT_PIN(i) ((u8[]){ LED1, LED2, LED3 }[(i)])
+#define GET_BACKLIGHT_PIN(i) ((u32[]){ LED1, LED2, LED3 }[(i)])
 
 #define BACKLIGHTS_NUM 3
 

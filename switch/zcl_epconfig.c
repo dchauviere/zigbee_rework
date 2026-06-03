@@ -60,13 +60,13 @@ nv_sts_t restoreEPConfig(u8 endpoint)
 		g_epConfigAttrs[idx].simpleClickDevice		= l_epConfigAttr.simpleClickDevice;
 		g_epConfigAttrs[idx].doubleClickDevice		= l_epConfigAttr.doubleClickDevice;
 		g_epConfigAttrs[idx].longPressDevice			= l_epConfigAttr.longPressDevice;
-		g_epConfigAttrs[idx].relayMode				      = l_epConfigAttr.relayMode;
+		g_epConfigAttrs[idx].relayMode				    = l_epConfigAttr.relayMode;
 		g_epConfigAttrs[idx].backlightMode			  = l_epConfigAttr.backlightMode;
 	}else{
 		g_epConfigAttrs[idx].simpleClickDevice		= 0xFFFE;
 		g_epConfigAttrs[idx].doubleClickDevice		= 0xFFFE;
 		g_epConfigAttrs[idx].longPressDevice			= 0xFFFE;
-		g_epConfigAttrs[idx].relayMode				      = ZCL_EPCONFIG_RELAY_MODE_ATTACHED;
+		g_epConfigAttrs[idx].relayMode				    = ZCL_EPCONFIG_RELAY_MODE_ATTACHED;
 		g_epConfigAttrs[idx].backlightMode			  = ZCL_EPCONFIG_BACKLIGHT_MODE_ONOFF;
   	st = nv_flashWriteNew(1, NV_MODULE_ZCL, NV_ITEM_APP_EPCONFIG_BASE + idx, sizeof(epconfig_attr_t), (u8*)&g_epConfigAttrs[idx]);
 	}
