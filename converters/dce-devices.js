@@ -16,10 +16,13 @@ const customExtend = {
       endpointNames: endpointNames,
       attributes: {
         simple_click_device: {name: "simple_click_device", ID: 0x0001, type: 0x21, write: true},
-        double_click_device: {name: "double_click_device", ID: 0x0002, type: 0x21, write: true},
-        long_press_device:   {name: "long_press_device", ID: 0x0003, type: 0x21, write: true},
-        relay_mode:          {name: "relay_mode", ID: 0x0004, type: 0x30, write: true},
-        backlight_mode:      {name: "backlight_mode", ID: 0x0005, type: 0x30, write: true},
+        simple_click_device_ep: {name: "simple_click_device_ep", ID: 0x0002, type: 0x20, write: true},
+        double_click_device: {name: "double_click_device", ID: 0x0003, type: 0x21, write: true},
+        double_click_device_ep: {name: "double_click_device_ep", ID: 0x0004, type: 0x20, write: true},
+        long_press_device:   {name: "long_press_device", ID: 0x0005, type: 0x21, write: true},
+        long_press_device_ep:   {name: "long_press_device_ep", ID: 0x0006, type: 0x20, write: true},
+        relay_mode:          {name: "relay_mode", ID: 0x0007, type: 0x30, write: true},
+        backlight_mode:      {name: "backlight_mode", ID: 0x0008, type: 0x30, write: true},
       },
       commands: {},
       commandsResponse: {},
@@ -47,47 +50,23 @@ function genEnumForEndpoint(epName) {
       description: "Actions switch",
       entityCategory: "config",
     }),
-    m.numeric({
-        endpointNames: [epName],
-        name: "simple_click_device",
-        cluster: "customClusterConfig",
-        attribute: {ID: 0x0001, type: 0x21},
-        description: "Simple Click Device",
-        entityCategory: "config",
-    }),
-    m.numeric({
-        endpointNames: [epName],
-        name: "double_click_device",
-        cluster: "customClusterConfig",
-        attribute: {ID: 0x0002, type: 0x21},
-        description: "Double Click Device",
-        entityCategory: "config",
-    }),
-    m.numeric({
-        endpointNames: [epName],
-        name: "long_press_device",
-        cluster: "customClusterConfig",
-        attribute: {ID: 0x0003, type: 0x21},
-        description: "Long Press Device",
-        entityCategory: "config",
+    m.enumLookup({
+      endpointName: epName,
+      name: "relay_mode",
+      lookup: {detached: 0, attached: 1},
+      cluster: "customClusterConfig",
+      attribute: {ID: 0x0007, type: 0x30},
+      description: "Relay Mode",
+      entityCategory: "config",
     }),
     m.enumLookup({
-        endpointName: epName,
-        name: "relay_mode",
-        lookup: {detached: 0, attached: 1},
-        cluster: "customClusterConfig",
-        attribute: {ID: 0x0004, type: 0x30},
-        description: "Relay Mode",
-        entityCategory: "config",
-    }),
-    m.enumLookup({
-        endpointName: epName,
-        name: "backlight_mode",
-        lookup: {on: 0, off: 1, onoff: 2, offon: 3},
-        cluster: "customClusterConfig",
-        attribute: {ID: 0x0005, type: 0x30},
-        description: "Backlight Mode",
-        entityCategory: "config",
+      endpointName: epName,
+      name: "backlight_mode",
+      lookup: {on: 0, off: 1, onoff: 2, offon: 3},
+      cluster: "customClusterConfig",
+      attribute: {ID: 0x0008, type: 0x30},
+      description: "Backlight Mode",
+      entityCategory: "config",
     }),
   ]
 }
@@ -117,7 +96,7 @@ async function configureDevice(device, coordinatorEndpoint, logger) {
     if (!ep) continue;
 
     // read initial values so Z2M/HA ont l'état au join
-    await ep.read(0xfc10, [0x0001, 0x0002, 0x0003, 0x0004, 0x0005], {manufacturerCode: 0x1141});
+    //await ep.read(0xfc10, [0x0007, 0x0008], {manufacturerCode: 0x1141});
   }
 }
 

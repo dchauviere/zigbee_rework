@@ -137,15 +137,28 @@ void app_processToggle(u8 btn) {
   dst.profileId = HA_PROFILE_ID;
   dst.dstAddrMode = APS_SHORT_DSTADDR_WITHEP;
   dst.dstAddr.shortAddr = g_epConfigAttrs[btn].simpleClickDevice;
-  dst.dstEp = 1;
+  dst.dstEp = g_epConfigAttrs[btn].simpleClickDeviceEp;
   dst.txOptions = APS_TX_OPT_ACK_TX;
   dst.radius = 30;
+	zcl_onOff_toggleCmd(getEndpointFromSwitch(btn), &dst, FALSE);
 	printf("send toggle to 0x%04x\n", dst.dstAddr.shortAddr);
 }
 
 void app_processDblClick(u8 btn) {
-	//zcl_onOffAttr_t *onOffAttr = zcl_onoffAttrGet(btn-1);
-	//refreshSwitch(btn);
+	if (g_epConfigAttrs[btn].doubleClickDevice == 0xFFFE) {
+		printf("no double click device configured\n");
+		return;	
+	}
+	epInfo_t dst;
+	TL_SETSTRUCTCONTENT(dst, 0);
+  dst.profileId = HA_PROFILE_ID;
+  dst.dstAddrMode = APS_SHORT_DSTADDR_WITHEP;
+  dst.dstAddr.shortAddr = g_epConfigAttrs[btn].doubleClickDevice;
+  dst.dstEp = g_epConfigAttrs[btn].doubleClickDeviceEp;
+  dst.txOptions = APS_TX_OPT_ACK_TX;
+  dst.radius = 30;
+	zcl_onOff_toggleCmd(getEndpointFromSwitch(btn), &dst, FALSE);
+	printf("send double click to 0x%04x\n", dst.dstAddr.shortAddr);
 }
 
 void app_processHold(u8 btn) {
@@ -165,6 +178,25 @@ void app_processHold(u8 btn) {
 
 		zcl_level_move2levelCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE, &move2Level);
 
+		if (g_epConfigAttrs[btn].longPressDevice != 0xFFFE) {
+			epInfo_t dstEpInfoDirect;
+			TL_SETSTRUCTCONTENT(dstEpInfoDirect, 0);
+
+			dstEpInfoDirect.profileId = HA_PROFILE_ID;
+			dstEpInfoDirect.dstAddrMode = APS_SHORT_DSTADDR_WITHEP;
+		  dstEpInfoDirect.dstAddr.shortAddr = g_epConfigAttrs[btn].longPressDevice;
+  		dstEpInfoDirect.dstEp = g_epConfigAttrs[btn].longPressDeviceEp;
+  		dstEpInfoDirect.txOptions = APS_TX_OPT_ACK_TX;
+  		dstEpInfoDirect.radius = 30;
+
+			moveToLvl_t move2Level;
+			move2Level.optPresent = 0;
+			move2Level.transitionTime = g_switchAttr[btn].transitionTime;
+			move2Level.level = l_switchState[btn].level;
+
+			zcl_level_move2levelCmd(getEndpointFromSwitch(btn), &dstEpInfoDirect, FALSE, &move2Level);
+		}
+
 		if(l_switchState[btn].dir){
 			l_switchState[btn].level += g_globalConfig.actionHoldStep;
 			if(l_switchState[btn].level >= 250){
@@ -183,22 +215,22 @@ void app_processHold(u8 btn) {
 
 void app_processClicks(u8 btn, u8 nbClicks) {
 	if(zb_isDeviceJoinedNwk()){
-    	if (nbClicks == 1) {
-    	    // Send Toggle
+    if (nbClicks == 1) {
+    	// Send Toggle
 			printf("send toggle\n");
 			app_processToggle(btn);
-    	} else if (nbClicks == 2) {
-    	  // Send double click
+    } else if (nbClicks == 2) {
+    	// Send double click
 		  printf("send double click\n");
 		  app_processDblClick(btn);
-    	} else if (btn == VK_SW1 && nbClicks == 5) {
-    	  	// Factory Reset
+    } else if (btn == VK_SW1 && nbClicks == 5) {
+    	// Factory Reset
 			printf("factory reset\n");
 			zb_factoryReset();
 			//wd_set_interval_ms(1);
 			//wd_start();
 			//while(1);
-    	} else {
+    } else {
 			printf("action with %d clicks not implemented", nbClicks);
 		}
 	} else {

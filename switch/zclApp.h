@@ -105,10 +105,13 @@ nv_sts_t restoreSwitchConfig(u8 sw);
 
 // Attribute IDs
 #define ZCL_ATTRID_EPCONFIG_SIMPLE_CLICK_DEVICE       0x0001
-#define ZCL_ATTRID_EPCONFIG_DOUBLE_CLICK_DEVICE       0x0002
-#define ZCL_ATTRID_EPCONFIG_LONG_PRESS_DEVICE         0x0003
-#define ZCL_ATTRID_EPCONFIG_RELAY_MODE                0x0004
-#define ZCL_ATTRID_EPCONFIG_BACKLIGHT_MODE            0x0005
+#define ZCL_ATTRID_EPCONFIG_SIMPLE_CLICK_DEVICE_EP    0x0002
+#define ZCL_ATTRID_EPCONFIG_DOUBLE_CLICK_DEVICE       0x0003
+#define ZCL_ATTRID_EPCONFIG_DOUBLE_CLICK_DEVICE_EP    0x0004
+#define ZCL_ATTRID_EPCONFIG_LONG_PRESS_DEVICE         0x0005
+#define ZCL_ATTRID_EPCONFIG_LONG_PRESS_DEVICE_EP      0x0006
+#define ZCL_ATTRID_EPCONFIG_RELAY_MODE                0x0007
+#define ZCL_ATTRID_EPCONFIG_BACKLIGHT_MODE            0x0008
 
 #define ZCL_EPCONFIG_RELAY_MODE_DETACHED              0x00
 #define ZCL_EPCONFIG_RELAY_MODE_ATTACHED              0x01
@@ -118,8 +121,11 @@ nv_sts_t restoreSwitchConfig(u8 sw);
 // Structure en RAM
 typedef struct {
     u16 simpleClickDevice;
+    u8 simpleClickDeviceEp;
     u16 doubleClickDevice;
+    u8 doubleClickDeviceEp;
     u16 longPressDevice;
+    u8 longPressDeviceEp;
     u8 relayMode;
 		u8 backlightMode;
 } epconfig_attr_t;
