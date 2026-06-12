@@ -3,7 +3,6 @@
 
 epconfig_attr_t g_epConfigAttrs[BUTTON_NUM];
 
-
 /*********************************************************************
  * @fn      saveEPConfig
  *
@@ -23,10 +22,13 @@ nv_sts_t saveEPConfig(u8 endpoint)
 	st = nv_flashReadNew(1, NV_MODULE_ZCL,  NV_ITEM_APP_EPCONFIG_BASE + endpoint, sizeof(epconfig_attr_t), (u8*)&l_epConfigAttr);
 
 	if(st == NV_SUCC){
-		if((l_epConfigAttr.simpleClickDevice != g_epConfigAttrs[endpoint].simpleClickDevice) || (l_epConfigAttr.doubleClickDevice != g_epConfigAttrs[endpoint].doubleClickDevice) ||
-		   	(l_epConfigAttr.longPressDevice != g_epConfigAttrs[endpoint].longPressDevice) || (l_epConfigAttr.relayMode != g_epConfigAttrs[endpoint].relayMode) ||
-			(l_epConfigAttr.backlightMode != g_epConfigAttrs[endpoint].backlightMode) || (l_epConfigAttr.simpleClickDeviceEp != g_epConfigAttrs[endpoint].simpleClickDeviceEp) ||
-			(l_epConfigAttr.doubleClickDeviceEp != g_epConfigAttrs[endpoint].doubleClickDeviceEp) || (l_epConfigAttr.longPressDeviceEp != g_epConfigAttrs[endpoint].longPressDeviceEp)) {
+		for (u8 i = 0; i < EP_CONFIG_EVENT_OCTET_MAX; i++) {
+			if (l_epConfigAttr.eventCfgRaw[i] != g_epConfigAttrs[endpoint].eventCfgRaw[i]) {
+				changed = true;
+				break;
+			}
+		}
+		if(l_epConfigAttr.backlightMode != g_epConfigAttrs[endpoint].backlightMode) {
 			changed = true;
 		}
 	}
@@ -56,25 +58,68 @@ nv_sts_t restoreEPConfig(u8 endpoint)
 	st = nv_flashReadNew(1, NV_MODULE_ZCL,  NV_ITEM_APP_EPCONFIG_BASE + endpoint, sizeof(epconfig_attr_t), (u8*)&l_epConfigAttr);
 
 	if(st == NV_SUCC){
-		g_epConfigAttrs[endpoint].simpleClickDevice		= l_epConfigAttr.simpleClickDevice;
-		g_epConfigAttrs[endpoint].simpleClickDeviceEp	= l_epConfigAttr.simpleClickDeviceEp;
-		g_epConfigAttrs[endpoint].doubleClickDevice		= l_epConfigAttr.doubleClickDevice;
-		g_epConfigAttrs[endpoint].doubleClickDeviceEp	= l_epConfigAttr.doubleClickDeviceEp;
-		g_epConfigAttrs[endpoint].longPressDevice			= l_epConfigAttr.longPressDevice;
-		g_epConfigAttrs[endpoint].longPressDeviceEp		= l_epConfigAttr.longPressDeviceEp;
-		g_epConfigAttrs[endpoint].relayMode				    = l_epConfigAttr.relayMode;
+		memcpy(g_epConfigAttrs[endpoint].eventCfgRaw, l_epConfigAttr.eventCfgRaw, EP_CONFIG_EVENT_OCTET_MAX);
+		g_epConfigAttrs[endpoint].eventCfgLen = epConfigEvent_decode(endpoint, g_epConfigAttrs[endpoint].eventCfgList, EP_CONFIG_EVENT_MAX_COUNT);
 		g_epConfigAttrs[endpoint].backlightMode			  = l_epConfigAttr.backlightMode;
 	}else{
-		g_epConfigAttrs[endpoint].simpleClickDevice		= 0xFFFE;
-		g_epConfigAttrs[endpoint].simpleClickDeviceEp	= 0x01;
-		g_epConfigAttrs[endpoint].doubleClickDevice		= 0xFFFE;
-		g_epConfigAttrs[endpoint].doubleClickDeviceEp	= 0x01;
-		g_epConfigAttrs[endpoint].longPressDevice			= 0xFFFE;
-		g_epConfigAttrs[endpoint].longPressDeviceEp		= 0x01;
-		g_epConfigAttrs[endpoint].relayMode				    = ZCL_EPCONFIG_RELAY_MODE_ATTACHED;
+		g_epConfigAttrs[endpoint].eventCfgRaw[0] = 0x08;
+		g_epConfigAttrs[endpoint].eventCfgRaw[1] = EPCONFIG_EVENT_CLICK;
+		g_epConfigAttrs[endpoint].eventCfgRaw[2] = 0x01;
+		g_epConfigAttrs[endpoint].eventCfgRaw[3] = EPCONFIG_CMD_ONOFF_TOGGLE;
+		g_epConfigAttrs[endpoint].eventCfgRaw[4] = 0xFE;
+		g_epConfigAttrs[endpoint].eventCfgRaw[5] = 0xFF;
+		g_epConfigAttrs[endpoint].eventCfgRaw[6] = 0x00;
+		g_epConfigAttrs[endpoint].eventCfgRaw[7] = EPCONFIG_RELAY_ATTACHED;
+		g_epConfigAttrs[endpoint].eventCfgRaw[8] = 0;
+		g_epConfigAttrs[endpoint].eventCfgLen = epConfigEvent_decode(endpoint, g_epConfigAttrs[endpoint].eventCfgList, EP_CONFIG_EVENT_MAX_COUNT);
 		g_epConfigAttrs[endpoint].backlightMode			  = ZCL_EPCONFIG_BACKLIGHT_MODE_ONOFF;
   	st = nv_flashWriteNew(1, NV_MODULE_ZCL, NV_ITEM_APP_EPCONFIG_BASE + endpoint, sizeof(epconfig_attr_t), (u8*)&g_epConfigAttrs[endpoint]);
 	}
 
 	return st;
+}
+
+u8 epConfigEvent_encode(u8 endpoint, epConfigEventCfg_t *list, u8 count)
+{
+    if (count > EP_CONFIG_EVENT_MAX_COUNT) {
+        count = EP_CONFIG_EVENT_MAX_COUNT;
+    }
+
+    u8 *p = &g_epConfigAttrs[endpoint].eventCfgRaw[1];
+    g_epConfigAttrs[endpoint].eventCfgRaw[0] = count * sizeof(epConfigEventCfg_t);
+
+    for (u8 i = 0; i < count; i++) {
+        *p++ = list[i].event;
+				*p++ = list[i].nbClicks;
+        *p++ = list[i].cmd;
+        *p++ = list[i].dstAddr & 0xFF;
+        *p++ = list[i].dstAddr >> 8;
+        *p++ = list[i].dstEndpoint;
+				*p++ = list[i].extra[0];
+				*p++ = list[i].extra[1];
+    }
+
+    return count;
+}
+
+u8 epConfigEvent_decode(u8 endpoint, epConfigEventCfg_t *outList, u8 maxCount)
+{
+    u8 len = g_epConfigAttrs[endpoint].eventCfgRaw[0];
+    u8 count = len / sizeof(epConfigEventCfg_t);
+    if (count > maxCount) count = maxCount;
+
+    const u8 *p = &g_epConfigAttrs[endpoint].eventCfgRaw[1];
+
+    for (u8 i = 0; i < count; i++) {
+        outList[i].event       = *p++;
+        outList[i].nbClicks    = *p++;
+        outList[i].cmd         = *p++;
+        outList[i].dstAddr     = p[0] | (p[1] << 8);
+        p += 2;
+        outList[i].dstEndpoint = *p++;
+				outList[i].extra[0]   = *p++;
+				outList[i].extra[1]   = *p++;
+    }
+
+    return count;
 }

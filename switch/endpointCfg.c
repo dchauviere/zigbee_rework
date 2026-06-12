@@ -44,7 +44,7 @@ af_simple_descriptor_t g_simpleDescs[BUTTON_NUM];
 zclAttrInfo_t g_identify_tbls[BUTTON_NUM][2];
 zclAttrInfo_t g_onOff_tbls[BUTTON_NUM][6];
 zclAttrInfo_t g_onOffSwitchCfg_tbls[BUTTON_NUM][3];
-zclAttrInfo_t g_epConfig_tbls[BUTTON_NUM][9];
+zclAttrInfo_t g_epConfig_tbls[BUTTON_NUM][3];
 
 /**
  *  @brief Definition for Incoming cluster / Sever Cluster
@@ -70,6 +70,7 @@ const u16 endpoint_outClusterList[] =
 	ZCL_CLUSTER_GEN_ON_OFF,
 	ZCL_CLUSTER_GEN_LEVEL_CONTROL,
   ZCL_CLUSTER_OTA,
+	ZCL_CLUSTER_EPCONFIG,
 };
 
 const u16 extra_Endpoint_inClusterList[] =
@@ -84,6 +85,7 @@ const u16 extra_Endpoint_outClusterList[] =
 {
 	ZCL_CLUSTER_GEN_ON_OFF,
 	ZCL_CLUSTER_GEN_LEVEL_CONTROL,
+	ZCL_CLUSTER_EPCONFIG,
 };
 
 
@@ -177,15 +179,9 @@ void registerZCL(u8 endpoint) {
 	}
 
 	zclAttrInfo_t *epConfig_attrTbl = g_epConfig_tbls[endpoint-1];
-	epConfig_attrTbl[0] = (zclAttrInfo_t) { ZCL_ATTRID_EPCONFIG_SIMPLE_CLICK_DEVICE, ZCL_DATA_TYPE_UINT16,  ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, (u8*)&g_epConfigAttrs[endpoint-1].simpleClickDevice };
-	epConfig_attrTbl[1] = (zclAttrInfo_t) { ZCL_ATTRID_EPCONFIG_SIMPLE_CLICK_DEVICE_EP, ZCL_DATA_TYPE_UINT8,  ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, (u8*)&g_epConfigAttrs[endpoint-1].simpleClickDeviceEp };
-	epConfig_attrTbl[2] = (zclAttrInfo_t) { ZCL_ATTRID_EPCONFIG_DOUBLE_CLICK_DEVICE, ZCL_DATA_TYPE_UINT16,  ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, (u8*)&g_epConfigAttrs[endpoint-1].doubleClickDevice };
-	epConfig_attrTbl[3] = (zclAttrInfo_t) { ZCL_ATTRID_EPCONFIG_DOUBLE_CLICK_DEVICE_EP, ZCL_DATA_TYPE_UINT8,  ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, (u8*)&g_epConfigAttrs[endpoint-1].doubleClickDeviceEp };
-	epConfig_attrTbl[4] = (zclAttrInfo_t) { ZCL_ATTRID_EPCONFIG_LONG_PRESS_DEVICE, 	ZCL_DATA_TYPE_UINT16,	ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, (u8*)&g_epConfigAttrs[endpoint-1].longPressDevice };
-	epConfig_attrTbl[5] = (zclAttrInfo_t) { ZCL_ATTRID_EPCONFIG_LONG_PRESS_DEVICE_EP, ZCL_DATA_TYPE_UINT8,	ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, (u8*)&g_epConfigAttrs[endpoint-1].longPressDeviceEp };
-	epConfig_attrTbl[6] = (zclAttrInfo_t) { ZCL_ATTRID_EPCONFIG_RELAY_MODE, 		    ZCL_DATA_TYPE_ENUM8,	 ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, (u8*)&g_epConfigAttrs[endpoint-1].relayMode };
-	epConfig_attrTbl[7] = (zclAttrInfo_t) { ZCL_ATTRID_EPCONFIG_BACKLIGHT_MODE, 	    ZCL_DATA_TYPE_ENUM8,	 ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, (u8*)&g_epConfigAttrs[endpoint-1].backlightMode };
-	epConfig_attrTbl[8] = (zclAttrInfo_t) { ZCL_ATTRID_GLOBAL_CLUSTER_REVISION, 			    ZCL_DATA_TYPE_UINT16,	 ACCESS_CONTROL_READ,  							        (u8*)&zcl_attr_global_clusterRevision};
+	epConfig_attrTbl[0] = (zclAttrInfo_t) { ZCL_ATTRID_EPCONFIG_EVENT_CFG, ZCL_DATA_TYPE_OCTET_STR,  ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, (u8*)&g_epConfigAttrs[endpoint-1].eventCfgRaw };
+	epConfig_attrTbl[1] = (zclAttrInfo_t) { ZCL_ATTRID_EPCONFIG_BACKLIGHT_MODE, 	    ZCL_DATA_TYPE_ENUM8,	 ACCESS_CONTROL_READ | ACCESS_CONTROL_WRITE, (u8*)&g_epConfigAttrs[endpoint-1].backlightMode };
+	epConfig_attrTbl[2] = (zclAttrInfo_t) { ZCL_ATTRID_GLOBAL_CLUSTER_REVISION, 			    ZCL_DATA_TYPE_UINT16,	 ACCESS_CONTROL_READ,  							        (u8*)&zcl_attr_global_clusterRevision};
 	st = zcl_registerCluster(endpoint, ZCL_CLUSTER_EPCONFIG, MANUFACTURER_CODE_TELINK, sizeof(g_epConfig_tbls[endpoint-1])/sizeof(zclAttrInfo_t), (zclAttrInfo_t *)g_epConfig_tbls[endpoint-1], NULL, NULL);
 	
 	if(st != ZCL_STA_SUCCESS) {

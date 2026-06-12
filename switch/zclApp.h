@@ -104,36 +104,52 @@ nv_sts_t restoreSwitchConfig(u8 sw);
 #define ZCL_EPCONFIG_BACKLIGHT_MODE_OFFON             0x03
 
 // Attribute IDs
-#define ZCL_ATTRID_EPCONFIG_SIMPLE_CLICK_DEVICE       0x0001
-#define ZCL_ATTRID_EPCONFIG_SIMPLE_CLICK_DEVICE_EP    0x0002
-#define ZCL_ATTRID_EPCONFIG_DOUBLE_CLICK_DEVICE       0x0003
-#define ZCL_ATTRID_EPCONFIG_DOUBLE_CLICK_DEVICE_EP    0x0004
-#define ZCL_ATTRID_EPCONFIG_LONG_PRESS_DEVICE         0x0005
-#define ZCL_ATTRID_EPCONFIG_LONG_PRESS_DEVICE_EP      0x0006
-#define ZCL_ATTRID_EPCONFIG_RELAY_MODE                0x0007
-#define ZCL_ATTRID_EPCONFIG_BACKLIGHT_MODE            0x0008
-
-#define ZCL_EPCONFIG_RELAY_MODE_DETACHED              0x00
-#define ZCL_EPCONFIG_RELAY_MODE_ATTACHED              0x01
+#define ZCL_ATTRID_EPCONFIG_EVENT_CFG                 0x0000
+#define ZCL_ATTRID_EPCONFIG_BACKLIGHT_MODE            0x0001
 
 #define NV_ITEM_APP_EPCONFIG_BASE		0x70
 
+#define EPCONFIG_EVENT_CLICK		    0x00
+#define EPCONFIG_EVENT_HOLD		      0x01
+
+#define EPCONFIG_CMD_ONOFF_TOGGLE		0x00
+#define EPCONFIG_CMD_ONOFF_ON		    0x01
+#define EPCONFIG_CMD_ONOFF_OFF		  0x02
+#define EPCONFIG_CMD_LVL_UP		      0x03
+#define EPCONFIG_CMD_LVL_DOWN       0x04
+
+#define EPCONFIG_RELAY_DETACHED     0x00
+#define EPCONFIG_RELAY_ATTACHED     0x01
+#define EPCONFIG_RELAY_INVERTED     0x02
+
+typedef struct {
+	u8 event;
+	u8 nbClicks;
+	u8 cmd;
+	u16 dstAddr;
+	u8 dstEndpoint;
+	u8 extra[2];
+} epConfigEventCfg_t;
+
+// Octet String: [len][data...]
+// max 5 entrées -> 1 + 5*5 = 26 octets
+#define EP_CONFIG_EVENT_MAX_COUNT   5
+#define EP_CONFIG_EVENT_OCTET_MAX   (1 + EP_CONFIG_EVENT_MAX_COUNT * sizeof(epConfigEventCfg_t))
+
 // Structure en RAM
 typedef struct {
-    u16 simpleClickDevice;
-    u8 simpleClickDeviceEp;
-    u16 doubleClickDevice;
-    u8 doubleClickDeviceEp;
-    u16 longPressDevice;
-    u8 longPressDeviceEp;
-    u8 relayMode;
-		u8 backlightMode;
+	epConfigEventCfg_t eventCfgList[EP_CONFIG_EVENT_MAX_COUNT];
+	u8 eventCfgRaw[EP_CONFIG_EVENT_OCTET_MAX];
+	u8 eventCfgLen;
+	u8 backlightMode;
 } epconfig_attr_t;
 
 extern epconfig_attr_t g_epConfigAttrs[BUTTON_NUM];
 
 nv_sts_t saveEPConfig(u8 endpoint);
 nv_sts_t restoreEPConfig(u8 endpoint);
+u8 epConfigEvent_decode(u8 endpoint, epConfigEventCfg_t *outList, u8 maxCount);
+u8 epConfigEvent_encode(u8 endpoint, epConfigEventCfg_t *list, u8 count);
 
 /***********************
  * Global Config

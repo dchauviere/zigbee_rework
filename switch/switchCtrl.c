@@ -111,133 +111,105 @@ void app_processMomentary(u8 btn, bool released) {
 			printf("unknown switch command");
 			return;
 	}
-	if (g_epConfigAttrs[btn].relayMode == ZCL_EPCONFIG_RELAY_MODE_ATTACHED) {
 		setRelay(btn, cmd);
-	}
 }
 
-void app_processToggle(u8 btn) {
-	epInfo_t dstEpInfo;
-	TL_SETSTRUCTCONTENT(dstEpInfo, 0);
 
-	dstEpInfo.profileId = HA_PROFILE_ID;
-	dstEpInfo.dstAddrMode = APS_DSTADDR_EP_NOTPRESETNT;
+void app_processMultiStateEvent(u8 btn, u8 event, u8 clicks) {
+	status_t result;
+	// Send event 
+	epInfo_t dstStd;
+	TL_SETSTRUCTCONTENT(dstStd, 0);
+	dstStd.profileId = HA_PROFILE_ID;
+	dstStd.dstAddrMode = APS_SHORT_DSTADDR_WITHEP;
+	dstStd.dstAddr.shortAddr = 0x0000;
+	dstStd.dstEp = 1;
+	dstStd.txOptions = APS_TX_OPT_ACK_TX;
+	dstStd.radius = 30;
+	result = zcl_sendCmd(getEndpointFromSwitch(btn), &dstStd, ZCL_CLUSTER_EPCONFIG, event, TRUE, ZCL_FRAME_CLIENT_SERVER_DIR, TRUE, MANUFACTURER_CODE_TELINK, zcl_seqNum++, sizeof(clicks), &clicks);
+	printf("send event %d to btn%d, result %02x\n", event, btn, result);
 
-	if (g_epConfigAttrs[btn].relayMode == ZCL_EPCONFIG_RELAY_MODE_ATTACHED) {
-		setRelay(btn, ZCL_CMD_ONOFF_TOGGLE);
-	}
-	zcl_onOff_toggleCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE);
+	epInfo_t dstDirect;
+	TL_SETSTRUCTCONTENT(dstDirect, 0);
+	dstDirect.profileId = HA_PROFILE_ID;
+	dstDirect.dstAddrMode = APS_SHORT_DSTADDR_WITHEP;
+	dstDirect.txOptions = APS_TX_OPT_ACK_TX;
+	dstDirect.radius = 30;
 
-	if (g_epConfigAttrs[btn].simpleClickDevice == 0xFFFE) {
-		printf("no simple click device configured\n");
-		return;
-	}
-	epInfo_t dst;
-	TL_SETSTRUCTCONTENT(dst, 0);
-  dst.profileId = HA_PROFILE_ID;
-  dst.dstAddrMode = APS_SHORT_DSTADDR_WITHEP;
-  dst.dstAddr.shortAddr = g_epConfigAttrs[btn].simpleClickDevice;
-  dst.dstEp = g_epConfigAttrs[btn].simpleClickDeviceEp;
-  dst.txOptions = APS_TX_OPT_ACK_TX;
-  dst.radius = 30;
-	zcl_onOff_toggleCmd(getEndpointFromSwitch(btn), &dst, FALSE);
-	printf("send toggle to 0x%04x\n", dst.dstAddr.shortAddr);
-}
+	for (u8 i=0; i<g_epConfigAttrs[btn].eventCfgLen; i++) {
+		epConfigEventCfg_t *cfg = &g_epConfigAttrs[btn].eventCfgList[i];
+		printf("cfg: 0x%02x, 0x%04x\n", cfg->cmd, cfg->dstAddr);
+		
+		if (cfg->event != event || cfg->nbClicks != clicks) { continue; }
 
-void app_processDblClick(u8 btn) {
-	if (g_epConfigAttrs[btn].doubleClickDevice == 0xFFFE) {
-		printf("no double click device configured\n");
-		return;	
-	}
-	epInfo_t dst;
-	TL_SETSTRUCTCONTENT(dst, 0);
-  dst.profileId = HA_PROFILE_ID;
-  dst.dstAddrMode = APS_SHORT_DSTADDR_WITHEP;
-  dst.dstAddr.shortAddr = g_epConfigAttrs[btn].doubleClickDevice;
-  dst.dstEp = g_epConfigAttrs[btn].doubleClickDeviceEp;
-  dst.txOptions = APS_TX_OPT_ACK_TX;
-  dst.radius = 30;
-	zcl_onOff_toggleCmd(getEndpointFromSwitch(btn), &dst, FALSE);
-	printf("send double click to 0x%04x\n", dst.dstAddr.shortAddr);
-}
-
-void app_processHold(u8 btn) {
-
-	if(zb_isDeviceJoinedNwk()){
-		epInfo_t dstEpInfo;
-		TL_SETSTRUCTCONTENT(dstEpInfo, 0);
-
-		dstEpInfo.profileId = HA_PROFILE_ID;
-		dstEpInfo.dstAddrMode = APS_DSTADDR_EP_NOTPRESETNT;
-
-		moveToLvl_t move2Level;
-
-		move2Level.optPresent = 0;
-		move2Level.transitionTime = g_switchAttr[btn].transitionTime;
-		move2Level.level = l_switchState[btn].level;
-
-		zcl_level_move2levelCmd(getEndpointFromSwitch(btn), &dstEpInfo, FALSE, &move2Level);
-
-		if (g_epConfigAttrs[btn].longPressDevice != 0xFFFE) {
-			epInfo_t dstEpInfoDirect;
-			TL_SETSTRUCTCONTENT(dstEpInfoDirect, 0);
-
-			dstEpInfoDirect.profileId = HA_PROFILE_ID;
-			dstEpInfoDirect.dstAddrMode = APS_SHORT_DSTADDR_WITHEP;
-		  dstEpInfoDirect.dstAddr.shortAddr = g_epConfigAttrs[btn].longPressDevice;
-  		dstEpInfoDirect.dstEp = g_epConfigAttrs[btn].longPressDeviceEp;
-  		dstEpInfoDirect.txOptions = APS_TX_OPT_ACK_TX;
-  		dstEpInfoDirect.radius = 30;
-
-			moveToLvl_t move2Level;
-			move2Level.optPresent = 0;
-			move2Level.transitionTime = g_switchAttr[btn].transitionTime;
-			move2Level.level = l_switchState[btn].level;
-
-			zcl_level_move2levelCmd(getEndpointFromSwitch(btn), &dstEpInfoDirect, FALSE, &move2Level);
+		switch (cfg->cmd) {
+			case EPCONFIG_CMD_ONOFF_TOGGLE:
+				if (cfg->extra[0] == EPCONFIG_RELAY_ATTACHED) {
+					setRelay(btn, ZCL_CMD_ONOFF_TOGGLE);
+				}
+				if (cfg->dstAddr != 0xFFFE) {
+					dstDirect.dstAddr.shortAddr = cfg->dstAddr;
+					dstDirect.dstEp = cfg->dstEndpoint;
+					zcl_onOff_toggleCmd(getEndpointFromSwitch(btn), &dstDirect, FALSE);
+					printf("send toggle to 0x%04x\n", dstDirect.dstAddr.shortAddr);
+				}
+				break;
+			case EPCONFIG_CMD_ONOFF_ON:
+				if (cfg->extra[0] == EPCONFIG_RELAY_ATTACHED) {
+					setRelay(btn, ZCL_CMD_ONOFF_ON);
+				}else if (cfg->extra[0] == EPCONFIG_RELAY_INVERTED) {
+					setRelay(btn, ZCL_CMD_ONOFF_OFF);
+				}
+				if (cfg->dstAddr != 0xFFFE) {
+					dstDirect.dstAddr.shortAddr = cfg->dstAddr;
+					dstDirect.dstEp = cfg->dstEndpoint;
+					zcl_onOff_onCmd(getEndpointFromSwitch(btn), &dstDirect, FALSE);
+					printf("send on to 0x%04x\n", dstDirect.dstAddr.shortAddr);
+				}
+				break;
+			case EPCONFIG_CMD_ONOFF_OFF:
+				if (cfg->extra[0] == EPCONFIG_RELAY_ATTACHED) {
+					setRelay(btn, ZCL_CMD_ONOFF_OFF);
+				}else if (cfg->extra[0] == EPCONFIG_RELAY_INVERTED) {
+					setRelay(btn, ZCL_CMD_ONOFF_ON);
+				}
+				if (cfg->dstAddr != 0xFFFE) {
+					dstDirect.dstAddr.shortAddr = cfg->dstAddr;
+					dstDirect.dstEp = cfg->dstEndpoint;
+					zcl_onOff_offCmd(getEndpointFromSwitch(btn), &dstDirect, FALSE);
+					printf("send off to 0x%04x\n", dstDirect.dstAddr.shortAddr);
+				}
+				break;
+			case EPCONFIG_CMD_LVL_UP:
+			case EPCONFIG_CMD_LVL_DOWN:
+				if(cfg->cmd == EPCONFIG_CMD_LVL_UP){
+					l_switchState[btn].level += cfg->extra[0];
+					if(l_switchState[btn].level >= 254){
+						l_switchState[btn].level = 0;
+					}
+				}else{
+					l_switchState[btn].level -= cfg->extra[0];
+					if(l_switchState[btn].level <= 1){
+						l_switchState[btn].level = 254;
+					}
+				}
+				moveToLvl_t move2Level;
+				move2Level.optPresent = 0;
+				move2Level.transitionTime = cfg->extra[1];
+				move2Level.level = l_switchState[btn].level;
+				if (cfg->dstAddr != 0xFFFE) {
+					dstDirect.dstAddr.shortAddr = cfg->dstAddr;
+					dstDirect.dstEp = cfg->dstEndpoint;
+					zcl_level_move2levelCmd(getEndpointFromSwitch(btn), &dstDirect, FALSE, &move2Level);
+					printf("send level move to 0x%04x\n", dstDirect.dstAddr.shortAddr);
+				}
+				break;
+			default:
+				printf("unknown command %d\n", cfg->cmd);
 		}
-
-		if(l_switchState[btn].dir){
-			l_switchState[btn].level += g_globalConfig.actionHoldStep;
-			if(l_switchState[btn].level >= 250){
-				l_switchState[btn].dir = !l_switchState[btn].dir;
-			}
-		}else{
-			l_switchState[btn].level -= g_globalConfig.actionHoldStep;
-			if(l_switchState[btn].level <= 1){
-				l_switchState[btn].dir = !l_switchState[btn].dir;
-			}
-		}
-	} else {
-		zb_rejoinReq(zb_apsChannelMaskGet(), g_bdbAttrs.scanDuration);
 	}
 }
 
-void app_processClicks(u8 btn, u8 nbClicks) {
-	if(zb_isDeviceJoinedNwk()){
-    if (nbClicks == 1) {
-    	// Send Toggle
-			printf("send toggle\n");
-			app_processToggle(btn);
-    } else if (nbClicks == 2) {
-    	// Send double click
-		  printf("send double click\n");
-		  app_processDblClick(btn);
-    } else if (btn == VK_SW1 && nbClicks == 5) {
-    	// Factory Reset
-			printf("factory reset\n");
-			zb_factoryReset();
-			//wd_set_interval_ms(1);
-			//wd_start();
-			//while(1);
-    } else {
-			printf("action with %d clicks not implemented", nbClicks);
-		}
-	} else {
-		printf("try to rejoin network");
-		zb_rejoinReq(zb_apsChannelMaskGet(), g_bdbAttrs.scanDuration);
-	}
-}
 
 void switchesHandler(void){
 	static u8 valid_keyCode = 0xff;
@@ -249,15 +221,15 @@ void switchesHandler(void){
 
 	if (state == APP_STATE_ACTION_CLICKS && clock_time_exceed(actionTime, g_globalConfig.actionclickTransition*1000)){
 		printf("Action clicks nbClicks=%d\n", nbClicks);
-		app_processClicks(valid_keyCode, nbClicks);
+		app_processMultiStateEvent(valid_keyCode, EPCONFIG_EVENT_CLICK, nbClicks);
 		state = APP_STATE_IDLE;
   	nbClicks = 0;
 	} else if (state == APP_STATE_WAIT_KEY_MODE && clock_time_exceed(keyPressedTime, g_globalConfig.actionHoldThreshold*1000)) {
 		state = APP_STATE_ACTION_HOLD;
-		app_processHold(valid_keyCode);
+		app_processMultiStateEvent(valid_keyCode, EPCONFIG_EVENT_HOLD, 0);
 		keyPressedTime = clock_time();
 	} else if (state == APP_STATE_ACTION_HOLD && clock_time_exceed(keyPressedTime, g_globalConfig.actionHoldTransition*1000)) {
-		app_processHold(valid_keyCode);
+		app_processMultiStateEvent(valid_keyCode, EPCONFIG_EVENT_HOLD, 0);
 		keyPressedTime = clock_time();
 	}
 
@@ -265,6 +237,11 @@ void switchesHandler(void){
 		if(kb_event.cnt == 1){
 			// Key Pressed
 			printf("key pressed\n");
+			if(!zb_isDeviceJoinedNwk()){
+				printf("try to rejoin network");
+				zb_rejoinReq(zb_apsChannelMaskGet(), g_bdbAttrs.scanDuration);
+			}
+
 			resetTime = clock_time();
 			valid_keyCode = kb_event.keycode[0] - 1;
 			keyPressedTime = clock_time();

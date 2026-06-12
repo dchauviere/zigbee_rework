@@ -39,7 +39,7 @@
  */
 static void switch_zclReadRspCmd(u16 clusterId, zclReadRspCmd_t *pReadRspCmd);
 static void switch_zclWriteRspCmd(u16 clusterId, zclWriteRspCmd_t *pWriteRspCmd);
-static void switch_zclWriteReqCmd(u16 clusterId, zclWriteCmd_t *pWriteReqCmd);
+static void switch_zclWriteReqCmd(u8 endpoint, u16 clusterId, zclWriteCmd_t *pWriteReqCmd);
 static void switch_zclCfgReportCmd(u16 clusterId, zclCfgReportCmd_t *pCfgReportCmd);
 static void switch_zclCfgReportRspCmd(u16 clusterId, zclCfgReportRspCmd_t *pCfgReportRspCmd);
 static void switch_zclReportCmd(u8 endpoint, u16 clusterId, zclReportCmd_t *pReportCmd);
@@ -68,7 +68,7 @@ void switch_zclProcessIncomingMsg(zclIncoming_t *pInHdlrMsg)
 			switch_zclWriteRspCmd(cluster, pInHdlrMsg->attrCmd);
 			break;
 		case ZCL_CMD_WRITE:
-			switch_zclWriteReqCmd(cluster, pInHdlrMsg->attrCmd);
+			switch_zclWriteReqCmd(endpoint, cluster, pInHdlrMsg->attrCmd);
 			break;
 		case ZCL_CMD_CONFIG_REPORT:
 			switch_zclCfgReportCmd(cluster, pInHdlrMsg->attrCmd);
@@ -124,9 +124,28 @@ static void switch_zclWriteRspCmd(u16 clusterId, zclWriteRspCmd_t *pWriteRspCmd)
  *
  * @return  None
  */
-static void switch_zclWriteReqCmd(u16 clusterId, zclWriteCmd_t *pWriteReqCmd)
+static void switch_zclWriteReqCmd(u8 endpoint, u16 clusterId, zclWriteCmd_t *pWriteReqCmd)
 {
-
+	if (clusterId == ZCL_CLUSTER_EPCONFIG) {
+		zclWriteRec_t *rec = &pWriteReqCmd->attrList[0];
+		if (rec->attrID == ZCL_ATTRID_EPCONFIG_EVENT_CFG) {
+			g_epConfigAttrs[endpoint].eventCfgLen = epConfigEvent_decode(endpoint, g_epConfigAttrs[endpoint].eventCfgList, EP_CONFIG_EVENT_MAX_COUNT);
+			printf("Write EP Config Event, endpoint: %d, event count: %d\n", endpoint, g_epConfigAttrs[endpoint].eventCfgLen);
+			printf("eventCfgRaw: ");
+			for (u8 i=0; i<g_epConfigAttrs[endpoint].eventCfgLen; i++) {
+				printf("  event: %02x, nbClicks: %02x, cmd: %02x, dstAddr: %04x, dstEndpoint: %02x, extra0: %02x, extra1: %02x\n", 
+					g_epConfigAttrs[endpoint].eventCfgList[i].event,
+					g_epConfigAttrs[endpoint].eventCfgList[i].nbClicks,
+					g_epConfigAttrs[endpoint].eventCfgList[i].cmd,
+					g_epConfigAttrs[endpoint].eventCfgList[i].dstAddr,
+					g_epConfigAttrs[endpoint].eventCfgList[i].dstEndpoint,
+					g_epConfigAttrs[endpoint].eventCfgList[i].extra[0],
+					g_epConfigAttrs[endpoint].eventCfgList[i].extra[1]
+				);
+			}
+			saveEPConfig(endpoint);
+		}
+	}
 }
 
 

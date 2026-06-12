@@ -16,3 +16,16 @@ python3 ./TlsrPgm.py -s -p/dev/ttyUSB0 i
 https://developer.tuya.com/en/docs/iot/ztu-module-datasheet?id=Ka45nl4ywgabp
 
 python3 ../TlsrComSwireWriter/TLSR825xComFlasher.py -p /dev/ttyUSB0 -t10 -c 24 wf 0x8000 ./.build/switch/switch_TS0013.bin
+
+
+# Usage
+
+Pour chaque bouton, appuyez 5 fois rapidement pour entrer en mode appairage. Ensuite, utilisez une application compatible Zigbee (comme Zigbee2MQTT ou une application de domotique) pour rechercher et connecter l'appareil. Une fois connecté, vous pourrez contrôler les fonctions d'OnOff et de LevelCtl à distance via l'application.
+
+# Configuration des évènements par endpoint
+
+| Evenemment | nbclicks | Commande            | Remote Address | Extra | Description                 |
+|------------|----------|---------------------|----------------|-------|-----------------------------|
+| Click      | 1        | OnOff Toggle/On/Off | 0xABCD         | RelayMode      | Appui court sur le bouton 1 |
+| Hold       | 0        | LevelCtl Up         | 0xABCD         | step  | Appui long sur le bouton 1  |
+| Hold       | 0        | LevelCtl Down       | 0xABCD         | step  | Appui long sur le bouton 1  |
